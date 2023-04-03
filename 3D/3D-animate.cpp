@@ -12,15 +12,19 @@
 #include <GL/glut.h>
 
 int time_cnt = 0;
-
-// Animation variables
+int t1 = 135, t2 = 160;
 
 /* Global Variables (Configs) */
 // Init options
+// GLfloat H2O_coords[3][3] = {
+//     {-5, 0, 0},
+//     {-6.18603436, -0.91832592, 0},
+//     {-3.81396564, -0.91832592, 0}};
+
 GLfloat H2O_coords[3][3] = {
     {-5, 0, 0},
-    {-6.18603436, -0.91832592, 0},
-    {-3.81396564, -0.91832592, 0}};
+    {-5.81, 1.18, 0},
+    {-5.81, -1.18, 0}};
 
 GLfloat SO3_coords[4][3] = {
     {0, 0, 0},
@@ -38,6 +42,15 @@ GLfloat H2SO4_coords[7][3] = {
     {7.2, 1, 1},
     {7.2, -1, -1}};
 
+GLfloat product_coords[7][3] = {
+    {0, 0, 0},
+    {0, 0, 0},
+    {0, 0, 0},
+    {0, 0, 0},
+    {0, 0, 0},
+    {0, 0, 0},
+    {0, 0, 0}};
+
 // GLfloat H2SO4_coords[7][3] = {
 //     {0, 0, 0},
 //     {0.6, 0.6, 0.6},
@@ -54,6 +67,13 @@ GLdouble sphereRadius = 0.4;
 GLdouble cylinderRadius = 0.2;
 GLint resolution = 100;
 GLint slices = resolution, stacks = resolution;
+
+// Animation variables
+int animation = 0;
+GLdouble SOcylinderRadius = 0.1;
+GLdouble HOcylinderRadius = 0.2;
+GLdouble delta_HO = cylinderRadius / (t2 - t1);
+GLdouble delta_SO = delta_HO;
 
 // Viewer options (GluLookAt)
 float fovy = 60.0, aspect = 1.0, zNear = 1.0, zFar = 100.0;
@@ -100,7 +120,7 @@ GLfloat pa_coords[9][3] = {
     {3.5, 0, 0},
     {3.146446609, -0.353553391, 0}};
 
-void draw_plus_arrow()
+void draw_plus()
 {
     // plus
     GLUquadric *myQuad;
@@ -109,6 +129,13 @@ void draw_plus_arrow()
     setLightColor(nitrogen);
     renderCylinder(pa_coords[0][0], pa_coords[0][1], pa_coords[0][2], pa_coords[1][0], pa_coords[1][1], pa_coords[1][2], 0.1, myQuad);
     renderCylinder(pa_coords[2][0], pa_coords[2][1], pa_coords[2][2], pa_coords[3][0], pa_coords[3][1], pa_coords[3][2], 0.1, myQuad);
+}
+
+void draw_arrow()
+{
+    // plus
+    GLUquadric *myQuad;
+    myQuad = gluNewQuadric();
 
     // arrow
     setLightColor(nitrogen);
@@ -116,17 +143,9 @@ void draw_plus_arrow()
     renderCylinder(pa_coords[6][0], pa_coords[6][1], pa_coords[6][2], pa_coords[5][0], pa_coords[5][1], pa_coords[5][2], 0.1, myQuad);
     renderCylinder(pa_coords[8][0], pa_coords[8][1], pa_coords[8][2], pa_coords[5][0], pa_coords[5][1], pa_coords[5][2], 0.1, myQuad);
 }
-void draw_H2O(GLfloat center[3])
+
+void draw_H2O()
 {
-    for (int i = 0; i < 3; i++)
-    {
-        for (int j = 0; j < 3; j++)
-        {
-            H2O_coords[i][j] = center[j] + H2O_coords[i][j];
-            // std::cout << H2O_coords[i][j] << " ";
-        }
-        // std::cout << "\n";
-    }
     for (int i = 0; i < 3; i++)
     {
         glPushMatrix();
@@ -141,31 +160,50 @@ void draw_H2O(GLfloat center[3])
     GLUquadric *myQuad;
     myQuad = gluNewQuadric();
 
+    // glColor3fv(white);
+    // setLightColor(white);
+    // renderCylinder(H2O_coords[1][0], H2O_coords[1][1], H2O_coords[1][2],
+    //                H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2],
+    //                cylinderRadius, myQuad);
+
     glColor3fv(white);
     setLightColor(white);
     renderCylinder(H2O_coords[1][0], H2O_coords[1][1], H2O_coords[1][2],
                    H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2],
                    cylinderRadius, myQuad);
 
-    glColor3fv(white);
-    setLightColor(white);
-    renderCylinder(H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2],
-                   H2O_coords[2][0], H2O_coords[2][1], H2O_coords[2][2],
-                   cylinderRadius, myQuad);
+    if (time_cnt < t2)
+    {
+        glColor3fv(white);
+        setLightColor(white);
+        renderCylinder(H2O_coords[2][0], H2O_coords[2][1], H2O_coords[2][2],
+                       H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2],
+                       HOcylinderRadius, myQuad);
+
+        if (time_cnt > t1)
+        {
+            HOcylinderRadius -= delta_HO;
+            glColor3fv(white);
+            setLightColor(white);
+            renderCylinder(H2O_coords[2][0], H2O_coords[2][1], H2O_coords[2][2],
+                           SO3_coords[2][0], SO3_coords[2][1], SO3_coords[2][2],
+                           cylinderRadius - HOcylinderRadius, myQuad);
+        }
+    }
+
+    // for (int i = 1; i < 3; ++i)
+    // {
+    //     glColor3fv(white);
+    //     setLightColor(white);
+    //     renderCylinder(H2O_coords[i][0], H2O_coords[i][1], H2O_coords[i][2],
+    //                    H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2],
+    //                    cylinderRadius, myQuad);
+    // }
 }
 
-void draw_SO3(GLfloat center[3])
+void draw_SO3()
 
 {
-    for (int i = 0; i < 4; i++)
-    {
-        for (int j = 0; j < 3; j++)
-        {
-            SO3_coords[i][j] = center[j] + SO3_coords[i][j];
-            // std::cout << SO3_coords[i][j] << " ";
-        }
-        // std::cout << "\n";
-    }
     for (int i = 0; i < 4; i++)
     {
         glPushMatrix();
@@ -202,17 +240,8 @@ void draw_SO3(GLfloat center[3])
                    cylinderRadius, myQuad);
 }
 
-void draw_H2SO4(GLfloat center[3])
+void draw_H2SO4()
 {
-    for (int i = 0; i < 7; i++)
-    {
-        for (int j = 0; j < 3; j++)
-        {
-            H2SO4_coords[i][j] = center[j] + H2SO4_coords[i][j];
-            // std::cout << H2SO4_coords[i][j] << " ";
-        }
-        // std::cout << "\n";
-    }
     for (int i = 0; i < 7; i++)
     {
         glPushMatrix();
@@ -331,15 +360,21 @@ void reshape(int w, int h)
 void timer(int)
 {
     glutPostRedisplay();
-    glutTimerFunc(1000 / 30, timer, 0);
-    if (H2O_coords[2][0] <= SO3_coords[2][0])
+    glutTimerFunc(1000 / 60, timer, 0);
+
+    if (animation)
     {
-        translate_xyz("H2O", 0.01, 0, 0);
-        translate_xyz("SO3", -0.01, 0, 0);
-        time_cnt++;
-        // std::cout << time_cnt << "\n";
+        if (time_cnt < t2)
+        {
+            translate_xyz("H2O", 0.01, 0, 0);
+            translate_xyz("SO3", -0.01, 0, 0);
+            time_cnt++;
+            // std::cout << time_cnt << "\n";
+        }
     }
 }
+
+int to_print = 1;
 
 int main(int argc, char *argv[])
 {
@@ -421,8 +456,6 @@ void setLightColor(GLfloat light_color[3])
     glMaterialfv(GL_FRONT, GL_SHININESS, shine);
 }
 
-// SRC: http://lifeofaprogrammergeek.blogspot.com/2008/07/rendering-cylinder-between-two-points.html
-// will make a cylender between 2 pts :D
 void renderCylinder(float x1, float y1, float z1, float x2, float y2, float z2, float radius, GLUquadricObj *quadric)
 {
     float vx = x2 - x1;
@@ -462,17 +495,14 @@ void renderCylinder(float x1, float y1, float z1, float x2, float y2, float z2, 
 void drawAxis()
 {
 
-    float originAxis[3] = {0, 0, 0}; // Origine
-    float xAxis[3] = {1, 0, 0};      // L'axe des x
-    float yAxis[3] = {0, 1, 0};      // L'axe des y
-    float zAxis[3] = {0, 0, 1};      // L'axe des z
+    float originAxis[3] = {-4, -4, -4};
+    float xAxis[3] = {-2, -4, -4};
+    float yAxis[3] = {-4, -2, -4};
+    float zAxis[3] = {-4, -4, -2};
 
-    // Temp: Désactivation de la lumière
     glDisable(GL_LIGHTING);
     glPushMatrix();
     glLineWidth(10.0);
-
-    // x = rouge, y = vert, z = bleu
 
     glBegin(GL_LINES);
     glColor3f(1.0, 0.0, 0.0);
@@ -564,13 +594,25 @@ void keyboardCallback(unsigned char key, int x, int y)
         translate_xyz("H2SO4", 0, 0, -delta);
         translate_xyz("PA", 0, 0, -delta);
     }
-    if (key == '0')
+
+    if (key == '+')
     {
-        for (int i = 0; i < 200000; ++i)
-        {
-            translate_xyz("H20", 0.00001, 0, 0);
-            glutPostRedisplay();
-        }
+        drawThatAxis = 1 - drawThatAxis;
+    }
+
+    if (key == '-')
+    {
+        lightEffect = 1 - lightEffect;
+    }
+
+    if (key == 13)
+    {
+        animation = 1 - animation;
+        std::cout << "Timer : " << time_cnt << std::endl;
+    }
+    if (key == 27)
+    {
+        exit(0);
     }
 
     glutPostRedisplay();
@@ -613,24 +655,103 @@ void displayCallback(void)
         glDisable(GL_LIGHT0);
     }
 
-    // glCallList(3);
-    GLfloat all_center[3] = {0, 0, 0};
+    draw_H2O();
+    draw_SO3();
 
-    draw_H2O(all_center);
+    draw_arrow();
 
-    draw_SO3(all_center);
-
-    int stop_plus_30 = 120;
-    if (time_cnt < stop_plus_30)
+    // int stop_plus = 120;
+    if (time_cnt < 40)
     {
-        draw_plus_arrow();
+        draw_plus();
     }
 
-    // draw_H2SO4(all_center);
+    // draw_H2SO4();
 
-    if (time_cnt > stop_plus_30 + 5)
+    GLUquadric *myQuad;
+    myQuad = gluNewQuadric();
+
+    if (time_cnt > t1 && time_cnt < t2)
     {
-        draw_H2SO4(all_center);
+        setLightColor(white);
+        renderCylinder(H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2],
+                       SO3_coords[0][0], SO3_coords[0][1], SO3_coords[0][2], SOcylinderRadius, myQuad);
+
+        if (SOcylinderRadius < cylinderRadius)
+        {
+            SOcylinderRadius += delta_SO;
+        }
+    }
+
+    if (time_cnt == t2)
+    {
+        setLightColor(white);
+        renderCylinder(H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2],
+                       SO3_coords[0][0], SO3_coords[0][1], SO3_coords[0][2],
+                       cylinderRadius, myQuad);
+        renderCylinder(H2O_coords[2][0], H2O_coords[2][1], H2O_coords[2][2],
+                       SO3_coords[2][0], SO3_coords[2][1], SO3_coords[2][2],
+                       cylinderRadius, myQuad);
+        draw_H2SO4();
+
+        if (to_print)
+        {
+            std::cout << "SO3:\n";
+            for (int i = 0; i < 4; ++i)
+            {
+                for (int j = 0; j < 3; ++j)
+                {
+                    std::cout << SO3_coords[i][j] << " ";
+                }
+                std::cout << "\n";
+            }
+
+            std::cout << "H2O:\n";
+            for (int i = 0; i < 3; ++i)
+            {
+                for (int j = 0; j < 3; ++j)
+                {
+                    std::cout << H2O_coords[i][j] << " ";
+                }
+                std::cout << "\n";
+            }
+
+            int ind[7] = {0, 2, 0, 1, 3, 2, 1};
+            char type[7] = {'s', 's', 'h', 's', 's', 'h', 'h'};
+            // Type 's': atom from SO3, Typer 'h': atom from H2O
+
+            for (int i = 0; i < 7; ++i)
+            {
+                for (int j = 0; j < 3; ++j)
+                {
+                    if (type[i] == 's')
+                        product_coords[i][j] = SO3_coords[ind[i]][j];
+                    else
+                        product_coords[i][j] = H2O_coords[ind[i]][j];
+                }
+            }
+            // for (int j = 0; j < 3; ++j)
+            // {
+            //     product_coords[0][j] = SO3_coords[0][j];
+            // }
+
+            // for (int j = 0; j < 3; ++j)
+            // {
+            //     product_coords[1][j] = SO3_coords[2][j];
+            // }
+
+            std::cout << "Product:\n";
+            for (int i = 0; i < 7; ++i)
+            {
+                for (int j = 0; j < 3; ++j)
+                {
+                    std::cout << product_coords[i][j] << " ";
+                }
+                std::cout << "\n";
+            }
+
+            to_print = 0;
+        }
     }
 
     glFlush();
