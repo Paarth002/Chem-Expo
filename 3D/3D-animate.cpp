@@ -11,6 +11,10 @@
 #include <string>
 #include <GL/glut.h>
 
+int time_cnt = 0;
+
+// Animation variables
+
 /* Global Variables (Configs) */
 // Init options
 GLfloat H2O_coords[3][3] = {
@@ -324,6 +328,19 @@ void reshape(int w, int h)
     glutPostRedisplay();
 }
 
+void timer(int)
+{
+    glutPostRedisplay();
+    glutTimerFunc(1000 / 30, timer, 0);
+    if (H2O_coords[2][0] <= SO3_coords[2][0])
+    {
+        translate_xyz("H2O", 0.01, 0, 0);
+        translate_xyz("SO3", -0.01, 0, 0);
+        time_cnt++;
+        // std::cout << time_cnt << "\n";
+    }
+}
+
 int main(int argc, char *argv[])
 {
     /* perform initialization NOT OpenGL/GLUT dependent,
@@ -344,12 +361,13 @@ int main(int argc, char *argv[])
     glutInitWindowSize((int)width, (int)height);
 
     /* create the window and store the handle to it */
-    wd = glutCreateWindow("H2SO4" /* title */);
+    wd = glutCreateWindow("Animation" /* title */);
 
     /* --- register callbacks with GLUT --- */
 
     /* register function to handle window resizes */
     glutReshapeFunc(reshape);
+    glutTimerFunc(0, timer, 0);
 
     setLightColor(white);
 
@@ -546,15 +564,14 @@ void keyboardCallback(unsigned char key, int x, int y)
         translate_xyz("H2SO4", 0, 0, -delta);
         translate_xyz("PA", 0, 0, -delta);
     }
-    // if (key == '0')
-    // {
-    //     for (int i = 0; i < 5; ++i)
-    //     {
-    //         sleep(1);
-    //         translate_H2O('d');
-    //         glutPostRedisplay();
-    //     }
-    // }
+    if (key == '0')
+    {
+        for (int i = 0; i < 200000; ++i)
+        {
+            translate_xyz("H20", 0.00001, 0, 0);
+            glutPostRedisplay();
+        }
+    }
 
     glutPostRedisplay();
 }
@@ -600,9 +617,21 @@ void displayCallback(void)
     GLfloat all_center[3] = {0, 0, 0};
 
     draw_H2O(all_center);
-    draw_H2SO4(all_center);
+
     draw_SO3(all_center);
-    draw_plus_arrow();
+
+    int stop_plus_30 = 120;
+    if (time_cnt < stop_plus_30)
+    {
+        draw_plus_arrow();
+    }
+
+    // draw_H2SO4(all_center);
+
+    if (time_cnt > stop_plus_30 + 5)
+    {
+        draw_H2SO4(all_center);
+    }
 
     glFlush();
 }

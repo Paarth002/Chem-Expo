@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <time.h>
 #include <fstream>
 #include <string>
@@ -8,8 +7,7 @@
 #include <iostream>
 #include <GL/glut.h>
 
-/* Global Variables (Configs) */
-// Init options
+// Global Variables
 GLfloat H2O_coords[3][3] = {
     {-5, 0, 0},
     {-6.18603436, -0.91832592, 0},
@@ -30,6 +28,17 @@ GLfloat H2SO4_coords[7][3] = {
     {4.2, 1, -1},
     {7.2, 1, 1},
     {7.2, -1, -1}};
+
+GLfloat pa_coords[9][3] = {
+    {-3, 0, 0},
+    {-2, 0, 0},
+    {-2.5, -0.5, 0},
+    {-2.5, 0.5, 0},
+    {2.5, 0, 0},
+    {3.5, 0, 0},
+    {3.146446609, 0.353553391, 0},
+    {3.5, 0, 0},
+    {3.146446609, -0.353553391, 0}};
 
 // GLfloat H2SO4_coords[7][3] = {
 //     {0, 0, 0},
@@ -68,7 +77,6 @@ GLfloat white[3] = {1.0, 1.0, 1.0};
 GLfloat black[3] = {1.0, 1.0, 1.0};
 
 /* Prototypes */
-void liaison(GLfloat color[3], GLfloat height);
 void draw_atom(GLfloat color[3]);
 void setLightColor(GLfloat light_color[3]);
 void renderCylinder(float x1, float y1, float z1, float x2, float y2, float z2, float radius, GLUquadricObj *quadrilc);
@@ -81,17 +89,6 @@ void displayCallback(void);
 void buildDisplayList();
 void options_menu(int input);
 void initMenu();
-
-GLfloat pa_coords[9][3] = {
-    {-3, 0, 0},
-    {-2, 0, 0},
-    {-2.5, -0.5, 0},
-    {-2.5, 0.5, 0},
-    {2.5, 0, 0},
-    {3.5, 0, 0},
-    {3.146446609, 0.353553391, 0},
-    {3.5, 0, 0},
-    {3.146446609, -0.353553391, 0}};
 
 void draw_plus_arrow()
 {
@@ -455,17 +452,12 @@ void shift_to_cntrs(GLfloat H2O_centers[3], GLfloat SO3_centers[3], GLfloat H2SO
 GLdouble width, height; /* window width and height */
 int wd;                 /* GLUT window handle */
 
-/* Program initialization NOT OpenGL/GLUT dependent,
- as we haven't created a GLUT window yet */
 void init(void)
 {
-    width = 1280.0; /* initial window width and height, */
-    height = 800.0; /* within which we draw. */
+    width = 1280.0;
+    height = 800.0;
 }
 
-// Called when window is resized,
-// also when window is first created,
-// before the first call to display().
 void reshape(int w, int h)
 {
     /* save new screen dimensions */
@@ -487,29 +479,16 @@ void reshape(int w, int h)
 
 int main(int argc, char *argv[])
 {
-    /* perform initialization NOT OpenGL/GLUT dependent,
-     as we haven't created a GLUT window yet */
-    init();
+    init(); // Initialization
 
-    /* initialize GLUT, let it extract command-line
-     GLUT options that you may provide
-     - NOTE THE '&' BEFORE argc */
     glutInit(&argc, argv);
-
-    /* specify the display to be single
-     buffered and color as RGBA values */
 
     glutInitDisplayMode(GLUT_DEPTH);
 
-    /* set the initial window size */
     glutInitWindowSize((int)width, (int)height);
 
-    /* create the window and store the handle to it */
     wd = glutCreateWindow("H2O + SO3 -> H2SO4" /* title */);
 
-    /* --- register callbacks with GLUT --- */
-
-    /* register function to handle window resizes */
     glutReshapeFunc(reshape);
 
     setLightColor(white);
@@ -520,16 +499,13 @@ int main(int argc, char *argv[])
     glEnable(GL_CULL_FACE);
     glClearColor(0.0, 0.0, 0.0, 0.0);
 
-    // buildDisplayList();
-
-    /* register function that draws in the window */
     glutDisplayFunc(displayCallback);
 
     // motion
     glutMouseFunc(mouseCallback);
     glutMotionFunc(motionCallback);
 
-    // exit with [esc] keyboard button
+    // keyboard functions
     glutKeyboardFunc(keyboardCallback);
 
     /* start the GLUT main loop */
@@ -541,15 +517,15 @@ int main(int argc, char *argv[])
 // Sphere
 void draw_atom(GLfloat color[3])
 {
-    // sans lumière:
+
+    // Set Sphere Color
     glColor3fv(color);
-    // avec lumière
     setLightColor(color);
 
     GLUquadric *myQuad;
     myQuad = gluNewQuadric();
 
-    // Création de la sphere
+    // Draw sphere
     gluSphere(myQuad, sphereRadius, slices, stacks);
 }
 
@@ -564,8 +540,6 @@ void setLightColor(GLfloat light_color[3])
     glMaterialfv(GL_FRONT, GL_SHININESS, shine);
 }
 
-// SRC: http://lifeofaprogrammergeek.blogspot.com/2008/07/rendering-cylinder-between-two-points.html
-// will make a cylender between 2 pts :D
 void renderCylinder(float x1, float y1, float z1, float x2, float y2, float z2, float radius, GLUquadricObj *quadric)
 {
     float vx = x2 - x1;
@@ -605,17 +579,14 @@ void renderCylinder(float x1, float y1, float z1, float x2, float y2, float z2, 
 void drawAxis()
 {
 
-    float originAxis[3] = {0, 0, 0}; // Origine
-    float xAxis[3] = {1, 0, 0};      // L'axe des x
-    float yAxis[3] = {0, 1, 0};      // L'axe des y
-    float zAxis[3] = {0, 0, 1};      // L'axe des z
+    float originAxis[3] = {-4, -4, -4};
+    float xAxis[3] = {-2, -4, -4};
+    float yAxis[3] = {-4, -2, -4};
+    float zAxis[3] = {-4, -4, -2};
 
-    // Temp: Désactivation de la lumière
     glDisable(GL_LIGHTING);
     glPushMatrix();
     glLineWidth(10.0);
-
-    // x = rouge, y = vert, z = bleu
 
     glBegin(GL_LINES);
     glColor3f(1.0, 0.0, 0.0);
@@ -630,7 +601,6 @@ void drawAxis()
     glEnd();
 
     glPopMatrix();
-    // Réactivation de la lumière
     glEnable(GL_LIGHTING);
 }
 
@@ -710,6 +680,10 @@ void keyboardCallback(unsigned char key, int x, int y)
         translate_H2O('5');
         translate_SO3('5');
         translate_plus_arrow('5');
+    }
+    if (key == '+')
+    {
+        drawThatAxis = 1 - drawThatAxis;
     }
     glutPostRedisplay();
 }
