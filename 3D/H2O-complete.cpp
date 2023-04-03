@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
     glutInitWindowSize((int)width, (int)height);
 
     /* create the window and store the handle to it */
-    wd = glutCreateWindow("H2SO4" /* title */);
+    wd = glutCreateWindow("H2O" /* title */);
 
     /* --- register callbacks with GLUT --- */
 

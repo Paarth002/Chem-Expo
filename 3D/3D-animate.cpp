@@ -1,11 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <unistd.h>
 #include <time.h>
 #include <fstream>
 #include <string>
 #include <cmath>
+#include <algorithm>
+#include <map>
 #include <iostream>
+#include <string>
 #include <GL/glut.h>
 
 /* Global Variables (Configs) */
@@ -241,214 +244,50 @@ void draw_H2SO4(GLfloat center[3])
     }
 }
 
-void translate_H2O(char key)
+void translate_xyz(std::string s, GLfloat dx, GLfloat dy, GLfloat dz)
 {
-    int n = 3;
-    GLfloat delta = 0.25;
-    if (key == 'w')
-    {
-        for (int i = 0; i < n; i++)
-        {
-            H2O_coords[i][1] += delta;
-        }
-    }
-    else if (key == 'a')
-    {
-        for (int i = 0; i < n; i++)
-        {
-            H2O_coords[i][0] -= delta;
-        }
-    }
-    else if (key == 's')
-    {
-        for (int i = 0; i < n; i++)
-        {
-            H2O_coords[i][1] -= delta;
-        }
-    }
-    else if (key == 'd')
-    {
-        for (int i = 0; i < n; i++)
-        {
-            H2O_coords[i][0] += delta;
-        }
-    }
-    else if (key == '8')
-    {
-        for (int i = 0; i < n; i++)
-        {
-            H2O_coords[i][2] += delta;
-        }
-    }
-    else if (key == '5')
-    {
-        for (int i = 0; i < n; i++)
-        {
-            H2O_coords[i][2] -= delta;
-        }
-    }
-}
 
-void translate_plus_arrow(char key)
-{
-    int n = 9;
-    GLfloat delta = 0.25;
-    if (key == 'w')
-    {
-        for (int i = 0; i < n; i++)
-        {
-            pa_coords[i][1] += delta;
-        }
-    }
-    else if (key == 'a')
-    {
-        for (int i = 0; i < n; i++)
-        {
-            pa_coords[i][0] -= delta;
-        }
-    }
-    else if (key == 's')
-    {
-        for (int i = 0; i < n; i++)
-        {
-            pa_coords[i][1] -= delta;
-        }
-    }
-    else if (key == 'd')
-    {
-        for (int i = 0; i < n; i++)
-        {
-            pa_coords[i][0] += delta;
-        }
-    }
-    else if (key == '8')
-    {
-        for (int i = 0; i < n; i++)
-        {
-            pa_coords[i][2] += delta;
-        }
-    }
-    else if (key == '5')
-    {
-        for (int i = 0; i < n; i++)
-        {
-            pa_coords[i][2] -= delta;
-        }
-    }
-}
+    std::map<std::string, int> molecules = {{"H2O", 0},
+                                            {"SO3", 1},
+                                            {"H2SO4", 2},
+                                            {"PA", 3}};
 
-void translate_SO3(char key)
-{
-    int n = 4;
-    GLfloat delta = 0.25;
-    if (key == 'w')
-    {
-        for (int i = 0; i < n; i++)
-        {
-            SO3_coords[i][1] += delta;
-        }
-    }
-    else if (key == 'a')
-    {
-        for (int i = 0; i < n; i++)
-        {
-            SO3_coords[i][0] -= delta;
-        }
-    }
-    else if (key == 's')
-    {
-        for (int i = 0; i < n; i++)
-        {
-            SO3_coords[i][1] -= delta;
-        }
-    }
-    else if (key == 'd')
-    {
-        for (int i = 0; i < n; i++)
-        {
-            SO3_coords[i][0] += delta;
-        }
-    }
-    else if (key == '8')
-    {
-        for (int i = 0; i < n; i++)
-        {
-            SO3_coords[i][2] += delta;
-        }
-    }
-    else if (key == '5')
-    {
-        for (int i = 0; i < n; i++)
-        {
-            SO3_coords[i][2] -= delta;
-        }
-    }
-}
+    int ind = molecules[s];
 
-void translate_H2SO4(char key)
-{
-    int n = 7;
-    GLfloat delta = 0.25;
-    if (key == 'w')
+    switch (ind)
     {
-        for (int i = 0; i < n; i++)
+    case 0:
+        for (int i = 0; i < 3; i++)
         {
-            H2SO4_coords[i][1] += delta;
+            H2O_coords[i][0] += dx;
+            H2O_coords[i][1] += dy;
+            H2O_coords[i][2] += dz;
         }
-    }
-    else if (key == 'a')
-    {
-        for (int i = 0; i < n; i++)
+        break;
+    case 1:
+        for (int i = 0; i < 4; i++)
         {
-            H2SO4_coords[i][0] -= delta;
+            SO3_coords[i][0] += dx;
+            SO3_coords[i][1] += dy;
+            SO3_coords[i][2] += dz;
         }
-    }
-    else if (key == 's')
-    {
-        for (int i = 0; i < n; i++)
+        break;
+    case 2:
+        for (int i = 0; i < 7; i++)
         {
-            H2SO4_coords[i][1] -= delta;
+            H2SO4_coords[i][0] += dx;
+            H2SO4_coords[i][1] += dy;
+            H2SO4_coords[i][2] += dz;
         }
-    }
-    else if (key == 'd')
-    {
-        for (int i = 0; i < n; i++)
+        break;
+    case 3:
+        for (int i = 0; i < 9; i++)
         {
-            H2SO4_coords[i][0] += delta;
+            pa_coords[i][0] += dx;
+            pa_coords[i][1] += dy;
+            pa_coords[i][2] += dz;
         }
-    }
-    else if (key == '8')
-    {
-        for (int i = 0; i < n; i++)
-        {
-            H2SO4_coords[i][2] += delta;
-        }
-    }
-    else if (key == '5')
-    {
-        for (int i = 0; i < n; i++)
-        {
-            H2SO4_coords[i][2] -= delta;
-        }
-    }
-}
-
-void shift_to_cntrs(GLfloat H2O_centers[3], GLfloat SO3_centers[3], GLfloat H2SO4_centers[3])
-{
-    for (int i = 0; i < 7; ++i)
-    {
-        for (int j = 0; j < 3; ++j)
-        {
-            if (i < 3)
-            {
-                H2O_coords[i][j] += H2O_centers[j];
-            }
-            if (i < 4)
-            {
-                SO3_coords[i][j] += SO3_centers[j];
-            }
-            H2SO4_coords[i][j] += H2SO4_centers[j];
-        }
+        break;
     }
 }
 
@@ -505,7 +344,7 @@ int main(int argc, char *argv[])
     glutInitWindowSize((int)width, (int)height);
 
     /* create the window and store the handle to it */
-    wd = glutCreateWindow("H2O + SO3 -> H2SO4" /* title */);
+    wd = glutCreateWindow("H2SO4" /* title */);
 
     /* --- register callbacks with GLUT --- */
 
@@ -663,54 +502,60 @@ void motionCallback(int x, int y)
 
 void keyboardCallback(unsigned char key, int x, int y)
 {
+    GLfloat delta = 0.25;
+
     if (key == 'a' || key == 'A')
     {
-        // cout << "Key pressed: A\n";
-        translate_H2SO4('a');
-        translate_H2O('a');
-        translate_SO3('a');
-        translate_plus_arrow('a');
+        translate_xyz("H2O", -delta, 0, 0);
+        translate_xyz("SO3", -delta, 0, 0);
+        translate_xyz("H2SO4", -delta, 0, 0);
+        translate_xyz("PA", -delta, 0, 0);
     }
     if (key == 'w' || key == 'W')
     {
-        // cout << "Key pressed: W\n";
-        translate_H2SO4('w');
-        translate_H2O('w');
-        translate_SO3('w');
-        translate_plus_arrow('w');
+        translate_xyz("H2O", 0, delta, 0);
+        translate_xyz("SO3", 0, delta, 0);
+        translate_xyz("H2SO4", 0, delta, 0);
+        translate_xyz("PA", 0, delta, 0);
     }
     if (key == 's' || key == 'S')
     {
-        // cout << "Key pressed: S\n";
-        translate_H2SO4('s');
-        translate_H2O('s');
-        translate_SO3('s');
-        translate_plus_arrow('s');
+        translate_xyz("H2O", 0, -delta, 0);
+        translate_xyz("SO3", 0, -delta, 0);
+        translate_xyz("H2SO4", 0, -delta, 0);
+        translate_xyz("PA", 0, -delta, 0);
     }
     if (key == 'd' || key == 'D')
     {
-        // cout << "Key pressed: D\n";
-        translate_H2SO4('d');
-        translate_H2O('d');
-        translate_SO3('d');
-        translate_plus_arrow('d');
+        translate_xyz("H2O", delta, 0, 0);
+        translate_xyz("SO3", delta, 0, 0);
+        translate_xyz("H2SO4", delta, 0, 0);
+        translate_xyz("PA", delta, 0, 0);
     }
     if (key == '8')
     {
-        // cout << "Key pressed: D\n";
-        translate_H2SO4('8');
-        translate_H2O('8');
-        translate_SO3('8');
-        translate_plus_arrow('8');
+        translate_xyz("H2O", 0, 0, delta);
+        translate_xyz("SO3", 0, 0, delta);
+        translate_xyz("H2SO4", 0, 0, delta);
+        translate_xyz("PA", 0, 0, delta);
     }
     if (key == '5')
     {
-        // cout << "Key pressed: D\n";
-        translate_H2SO4('5');
-        translate_H2O('5');
-        translate_SO3('5');
-        translate_plus_arrow('5');
+        translate_xyz("H2O", 0, 0, -delta);
+        translate_xyz("SO3", 0, 0, -delta);
+        translate_xyz("H2SO4", 0, 0, -delta);
+        translate_xyz("PA", 0, 0, -delta);
     }
+    // if (key == '0')
+    // {
+    //     for (int i = 0; i < 5; ++i)
+    //     {
+    //         sleep(1);
+    //         translate_H2O('d');
+    //         glutPostRedisplay();
+    //     }
+    // }
+
     glutPostRedisplay();
 }
 
@@ -758,5 +603,6 @@ void displayCallback(void)
     draw_H2SO4(all_center);
     draw_SO3(all_center);
     draw_plus_arrow();
+
     glFlush();
 }
