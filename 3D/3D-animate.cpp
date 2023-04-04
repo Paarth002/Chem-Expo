@@ -12,7 +12,7 @@
 #include <GL/glut.h>
 
 int time_cnt = 0;
-int t1 = 135, t2 = 160;
+int t1 = 135, t2 = 160, t3 = 300;
 
 /* Global Variables (Configs) */
 // Init options
@@ -51,6 +51,15 @@ GLfloat product_coords[7][3] = {
     {0, 0, 0},
     {0, 0, 0}};
 
+GLfloat deltas[7][3] = {
+    {0, 0, 0},
+    {0, 0, 0},
+    {0, 0, 0},
+    {0, 0, 0},
+    {0, 0, 0},
+    {0, 0, 0},
+    {0, 0, 0}};
+
 // GLfloat H2SO4_coords[7][3] = {
 //     {0, 0, 0},
 //     {0.6, 0.6, 0.6},
@@ -69,7 +78,7 @@ GLint resolution = 100;
 GLint slices = resolution, stacks = resolution;
 
 // Animation variables
-int animation = 0;
+int animation = 0, merge = 0;
 GLdouble SOcylinderRadius = 0.1;
 GLdouble HOcylinderRadius = 0.2;
 GLdouble delta_HO = cylinderRadius / (t2 - t1);
@@ -277,6 +286,54 @@ void draw_H2SO4()
     }
 }
 
+void draw_product()
+{
+    // if (time_cnt > t2 && time_cnt < t3)
+    // {
+    //     for (int i = 0; i < 7; ++i)
+    //     {
+    //         for (int j = 0; j < 3; ++j)
+    //         {
+    //             product_coords[i][j] = product_coords[i][j] += deltas[i][j];
+    //         }
+    //     }
+    // }
+
+    for (int i = 0; i < 7; i++)
+    {
+        glPushMatrix();
+        glTranslatef(product_coords[i][0], product_coords[i][1], product_coords[i][2]);
+        if (i == 0)
+            draw_atom(sulphur);
+        else if (i < 5)
+            draw_atom(oxygen);
+        else
+            draw_atom(hydrogen);
+        glPopMatrix();
+    }
+
+    GLUquadric *myQuad;
+    myQuad = gluNewQuadric();
+
+    for (int i = 1; i < 7; i++)
+    {
+        glColor3fv(white);
+        setLightColor(white);
+        if (i < 5)
+        {
+            renderCylinder(product_coords[0][0], product_coords[0][1], product_coords[0][2],
+                           product_coords[i][0], product_coords[i][1], product_coords[i][2],
+                           cylinderRadius, myQuad);
+        }
+        else
+        {
+            renderCylinder(product_coords[i - 4][0], product_coords[i - 4][1], product_coords[i - 4][2],
+                           product_coords[i][0], product_coords[i][1], product_coords[i][2],
+                           cylinderRadius, myQuad);
+        }
+    }
+}
+
 void translate_xyz(std::string s, GLfloat dx, GLfloat dy, GLfloat dz)
 {
 
@@ -368,6 +425,14 @@ void timer(int)
         {
             translate_xyz("H2O", 0.01, 0, 0);
             translate_xyz("SO3", -0.01, 0, 0);
+            time_cnt++;
+            // std::cout << time_cnt << "\n";
+        }
+    }
+    if (merge)
+    {
+        if (time_cnt < t3)
+        {
             time_cnt++;
             // std::cout << time_cnt << "\n";
         }
@@ -655,10 +720,15 @@ void displayCallback(void)
         glDisable(GL_LIGHT0);
     }
 
-    draw_H2O();
-    draw_SO3();
+    // draw_H2O();
+    // draw_SO3();
 
-    draw_arrow();
+    if (time_cnt < t2)
+    {
+        draw_H2O();
+        draw_SO3();
+        draw_arrow();
+    }
 
     // int stop_plus = 120;
     if (time_cnt < 40)
@@ -750,8 +820,21 @@ void displayCallback(void)
                 std::cout << "\n";
             }
 
+            for (int i = 0; i < 7; ++i)
+            {
+                for (int j = 0; j < 3; ++j)
+                {
+                    deltas[i][j] = (product_coords[i][j] - H2SO4_coords[i][j]) / (t3 - t2);
+                }
+            }
+            merge = 1;
             to_print = 0;
         }
+    }
+
+    if (time_cnt > t2)
+    {
+        draw_product();
     }
 
     glFlush();
