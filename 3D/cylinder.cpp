@@ -540,40 +540,107 @@ void setLightColor(GLfloat light_color[3])
     glMaterialfv(GL_FRONT, GL_SHININESS, shine);
 }
 
+// void renderCylinder(float x1, float y1, float z1, float x2, float y2, float z2, float radius, GLUquadricObj *quadric)
+// {
+//     float vx = x2 - x1;
+//     float vy = y2 - y1;
+//     float vz = z2 - z1;
+//     float ax, rx, ry, rz;
+//     float len = sqrt(vx * vx + vy * vy + vz * vz);
+
+//     glPushMatrix();
+//     glTranslatef(x1, y1, z1);
+//     if (fabs(vz) < 0.0001)
+//     {
+//         glRotatef(90, 0, 1, 0);
+//         ax = 57.2957795 * -atan(vy /
+//                                 vx);
+//         if (vx < 0)
+//         {
+//         }
+//         rx = 1;
+//         ry = 0;
+//         rz = 0;
+//     }
+//     else
+//     {
+//         ax = 57.2957795 * acos(vz / len);
+//         if (vz < 0.0)
+//             ax = -ax;
+//         rx = -vy * vz;
+//         ry = vx * vz;
+//         rz = 0;
+//     }
+//     glRotatef(ax, rx, ry, rz);
+//     gluQuadricOrientation(quadric, GLU_OUTSIDE);
+//     gluCylinder(quadric, radius, radius, len, slices, stacks);
+//     glPopMatrix();
+// }
+
 void renderCylinder(float x1, float y1, float z1, float x2, float y2, float z2, float radius, GLUquadricObj *quadric)
 {
+    if (z2 < z1)
+    {
+        std::swap(x1, x2);
+        std::swap(y1, y2);
+        std::swap(z1, z2);
+    }
+
     float vx = x2 - x1;
     float vy = y2 - y1;
     float vz = z2 - z1;
-    float ax, rx, ry, rz;
-    float len = sqrt(vx * vx + vy * vy + vz * vz);
+    float v = sqrt(vx * vx + vy * vy + vz * vz);
+    float ax;
 
-    glPushMatrix();
-    glTranslatef(x1, y1, z1);
-    if (fabs(vz) < 0.0001)
+    if (fabs(vz) < 1.0e-3)
     {
-        glRotatef(90, 0, 1, 0);
-        ax = 57.2957795 * -atan(vy / vx);
-        if (vx < 0)
-        {
-        }
-        rx = 1;
-        ry = 0;
-        rz = 0;
+        ax = 57.2957795 * acos(vx / v); // rotation angle in x-y plane
+        if (vy <= 0.0)
+            ax = -ax;
     }
     else
     {
-        ax = 57.2957795 * acos(vz / len);
-        if (vz < 0.0)
+        ax = 57.2957795 * acos(vz / v); // rotation angle
+        if (vz <= 0.0)
             ax = -ax;
-        rx = -vy * vz;
-        ry = vx * vz;
-        rz = 0;
     }
-    glRotatef(ax, rx, ry, rz);
+
+    float rx = -vy * vz;
+    float ry = vx * vz;
+
+    glPushMatrix();
+    // draw the cylinder body
+    glTranslatef(x1, y1, z1);
+    if (fabs(vz) < 1.0e-3)
+    {
+        if (vx < 0.0)
+        {
+            glRotated(90.0, 0, 1, 0.0);
+            glRotated(ax, -1.0, 0.0, 0.0);
+        }
+        else
+        {
+            glRotated(90.0, 0, 1, 0.0);    // Rotate & align with x axis
+            glRotated(ax, -1.0, 0.0, 0.0); // Rotate to point 2 in x-y plane
+        }
+    }
+    else
+    {
+        glRotated(ax, rx, ry, 0.0); // Rotate about rotation vector
+    }
     gluQuadricOrientation(quadric, GLU_OUTSIDE);
-    gluCylinder(quadric, radius, radius, len, slices, stacks);
+    gluCylinder(quadric, radius, radius, v, slices, stacks);
     glPopMatrix();
+
+    // draw the first cap
+    // gluQuadricOrientation(quadric, GLU_INSIDE);
+    // gluDisk(quadric, 0.0, radius, subdivisions, 1);
+    // glTranslatef(0, 0, v);
+
+    // // draw the second cap
+    // gluQuadricOrientation(quadric, GLU_OUTSIDE);
+    // gluDisk(quadric, 0.0, radius, subdivisions, 1);
+    // glPopMatrix();
 }
 
 void drawAxis()
@@ -739,7 +806,7 @@ void displayCallback(void)
     setLightColor(white);
 
     // renderCylinder(0, 1, 0, 0, 0, 0, 0.2, myQuad);
-    renderCylinder(0, 0, 0, 0, 0, -1, 0.2, myQuad);
+    renderCylinder(0, 0, 0, 1, 1, -1, 0.2, myQuad);
     // problem with x
 
     glFlush();

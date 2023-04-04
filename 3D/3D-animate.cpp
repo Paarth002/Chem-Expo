@@ -12,7 +12,7 @@
 #include <GL/glut.h>
 
 int time_cnt = 0;
-int t1 = 135, t2 = 160, t3 = 300;
+int t1 = 135, t2 = 160, t3 = 500;
 
 /* Global Variables (Configs) */
 // Init options
@@ -60,14 +60,17 @@ GLfloat deltas[7][3] = {
     {0, 0, 0},
     {0, 0, 0}};
 
-// GLfloat H2SO4_coords[7][3] = {
-//     {0, 0, 0},
-//     {0.6, 0.6, 0.6},
-//     {0.6, -0.6, -0.6},
-//     {-0.6, -0.6, 0.6},
-//     {-0.6, 0.6, -0.6},
-//     {1.6, 0.6, 0.6},
-//     {1.6, -0.6, -0.6}};
+GLfloat H2O_orig_coords[3][3] = {
+    {-5, 0, 0},
+    {-5.81, 1.18, 0},
+    {-5.81, -1.18, 0}};
+
+GLfloat SO3_orig_coords[4][3] = {
+    {0, 0, 0},
+    {0, 1.5, 0},
+    {-1.299038106, -0.75, 0},
+    {1.299038106, -0.75, 0},
+};
 
 int selectedObject = 3;
 bool drawThatAxis = 0;
@@ -119,10 +122,10 @@ void options_menu(int input);
 void initMenu();
 
 GLfloat pa_coords[9][3] = {
-    {-3, 0, 0},
-    {-2, 0, 0},
-    {-2.5, -0.5, 0},
-    {-2.5, 0.5, 0},
+    {-3.5, 0, 0},
+    {-2.5, 0, 0},
+    {-3, -0.5, 0},
+    {-3, 0.5, 0},
     {2.5, 0, 0},
     {3.5, 0, 0},
     {3.146446609, 0.353553391, 0},
@@ -198,6 +201,15 @@ void draw_H2O()
                            SO3_coords[2][0], SO3_coords[2][1], SO3_coords[2][2],
                            cylinderRadius - HOcylinderRadius, myQuad);
         }
+    }
+
+    if (time_cnt == t3)
+    {
+        glColor3fv(white);
+        setLightColor(white);
+        renderCylinder(H2O_coords[2][0], H2O_coords[2][1], H2O_coords[2][2],
+                       H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2],
+                       cylinderRadius, myQuad);
     }
 
     // for (int i = 1; i < 3; ++i)
@@ -288,16 +300,16 @@ void draw_H2SO4()
 
 void draw_product()
 {
-    // if (time_cnt > t2 && time_cnt < t3)
-    // {
-    //     for (int i = 0; i < 7; ++i)
-    //     {
-    //         for (int j = 0; j < 3; ++j)
-    //         {
-    //             product_coords[i][j] = product_coords[i][j] += deltas[i][j];
-    //         }
-    //     }
-    // }
+    if (time_cnt > t2 && time_cnt < t3)
+    {
+        for (int i = 0; i < 7; ++i)
+        {
+            for (int j = 0; j < 3; ++j)
+            {
+                product_coords[i][j] = product_coords[i][j] += deltas[i][j];
+            }
+        }
+    }
 
     for (int i = 0; i < 7; i++)
     {
@@ -414,6 +426,7 @@ void reshape(int w, int h)
     glutPostRedisplay();
 }
 
+int calc = 1;
 void timer(int)
 {
     glutPostRedisplay();
@@ -429,12 +442,32 @@ void timer(int)
             // std::cout << time_cnt << "\n";
         }
     }
+
     if (merge)
     {
         if (time_cnt < t3)
         {
             time_cnt++;
             // std::cout << time_cnt << "\n";
+        }
+        else if (time_cnt == t3 && calc)
+        {
+            calc = 0;
+            for (int i = 0; i < 3; ++i)
+            {
+                for (int j = 0; j < 3; ++j)
+                {
+                    H2O_coords[i][j] = H2O_orig_coords[i][j];
+                }
+            }
+
+            for (int i = 0; i < 4; ++i)
+            {
+                for (int j = 0; j < 3; ++j)
+                {
+                    SO3_coords[i][j] = SO3_orig_coords[i][j];
+                }
+            }
         }
     }
 }
@@ -523,39 +556,106 @@ void setLightColor(GLfloat light_color[3])
 
 void renderCylinder(float x1, float y1, float z1, float x2, float y2, float z2, float radius, GLUquadricObj *quadric)
 {
+    if (z2 < z1)
+    {
+        std::swap(x1, x2);
+        std::swap(y1, y2);
+        std::swap(z1, z2);
+    }
+
     float vx = x2 - x1;
     float vy = y2 - y1;
     float vz = z2 - z1;
-    float ax, rx, ry, rz;
-    float len = sqrt(vx * vx + vy * vy + vz * vz);
+    float v = sqrt(vx * vx + vy * vy + vz * vz);
+    float ax;
 
-    glPushMatrix();
-    glTranslatef(x1, y1, z1);
-    if (fabs(vz) < 0.0001)
+    if (fabs(vz) < 1.0e-3)
     {
-        glRotatef(90, 0, 1, 0);
-        ax = 57.2957795 * -atan(vy / vx);
-        if (vx < 0)
-        {
-        }
-        rx = 1;
-        ry = 0;
-        rz = 0;
+        ax = 57.2957795 * acos(vx / v); // rotation angle in x-y plane
+        if (vy <= 0.0)
+            ax = -ax;
     }
     else
     {
-        ax = 57.2957795 * acos(vz / len);
-        if (vz < 0.0)
+        ax = 57.2957795 * acos(vz / v); // rotation angle
+        if (vz <= 0.0)
             ax = -ax;
-        rx = -vy * vz;
-        ry = vx * vz;
-        rz = 0;
     }
-    glRotatef(ax, rx, ry, rz);
+
+    float rx = -vy * vz;
+    float ry = vx * vz;
+
+    glPushMatrix();
+    // draw the cylinder body
+    glTranslatef(x1, y1, z1);
+    if (fabs(vz) < 1.0e-3)
+    {
+        if (vx < 0.0)
+        {
+            glRotated(90.0, 0, 1, 0.0);
+            glRotated(ax, -1.0, 0.0, 0.0);
+        }
+        else
+        {
+            glRotated(90.0, 0, 1, 0.0);    // Rotate & align with x axis
+            glRotated(ax, -1.0, 0.0, 0.0); // Rotate to point 2 in x-y plane
+        }
+    }
+    else
+    {
+        glRotated(ax, rx, ry, 0.0); // Rotate about rotation vector
+    }
     gluQuadricOrientation(quadric, GLU_OUTSIDE);
-    gluCylinder(quadric, radius, radius, len, slices, stacks);
+    gluCylinder(quadric, radius, radius, v, slices, stacks);
     glPopMatrix();
+
+    // draw the first cap
+    // gluQuadricOrientation(quadric, GLU_INSIDE);
+    // gluDisk(quadric, 0.0, radius, subdivisions, 1);
+    // glTranslatef(0, 0, v);
+
+    // // draw the second cap
+    // gluQuadricOrientation(quadric, GLU_OUTSIDE);
+    // gluDisk(quadric, 0.0, radius, subdivisions, 1);
+    // glPopMatrix();
 }
+
+// void renderCylinder(float x1, float y1, float z1, float x2, float y2, float z2, float radius, GLUquadricObj *quadric)
+// {
+//     float vx = x2 - x1;
+//     float vy = y2 - y1;
+//     float vz = z2 - z1;
+//     float ax, rx, ry, rz;
+//     float len = sqrt(vx * vx + vy * vy + vz * vz);
+
+//     glPushMatrix();
+//     glTranslatef(x1, y1, z1);
+//     if (fabs(vz) < 0.0001)
+//     {
+//         glRotatef(90, 0, 1, 0);
+//         ax = 57.2957795 * -atan(vy / vx);
+//         if (vx < 0)
+//         {
+//             ax = -ax;
+//         }
+//         rx = 1;
+//         ry = 0;
+//         rz = 0;
+//     }
+//     else
+//     {
+//         ax = 57.2957795 * acos(vz / len);
+//         if (vz < 0.0)
+//             ax = -ax;
+//         rx = -vy * vz;
+//         ry = vx * vz;
+//         rz = 0;
+//     }
+//     glRotatef(ax, rx, ry, rz);
+//     gluQuadricOrientation(quadric, GLU_OUTSIDE);
+//     gluCylinder(quadric, radius, radius, len, slices, stacks);
+//     glPopMatrix();
+// }
 
 void drawAxis()
 {
@@ -727,13 +827,13 @@ void displayCallback(void)
     {
         draw_H2O();
         draw_SO3();
-        draw_arrow();
     }
 
     // int stop_plus = 120;
     if (time_cnt < 40)
     {
         draw_plus();
+        draw_arrow();
     }
 
     // draw_H2SO4();
@@ -766,25 +866,25 @@ void displayCallback(void)
 
         if (to_print)
         {
-            std::cout << "SO3:\n";
-            for (int i = 0; i < 4; ++i)
-            {
-                for (int j = 0; j < 3; ++j)
-                {
-                    std::cout << SO3_coords[i][j] << " ";
-                }
-                std::cout << "\n";
-            }
+            // std::cout << "SO3:\n";
+            // for (int i = 0; i < 4; ++i)
+            // {
+            //     for (int j = 0; j < 3; ++j)
+            //     {
+            //         std::cout << SO3_coords[i][j] << " ";
+            //     }
+            //     std::cout << "\n";
+            // }
 
-            std::cout << "H2O:\n";
-            for (int i = 0; i < 3; ++i)
-            {
-                for (int j = 0; j < 3; ++j)
-                {
-                    std::cout << H2O_coords[i][j] << " ";
-                }
-                std::cout << "\n";
-            }
+            // std::cout << "H2O:\n";
+            // for (int i = 0; i < 3; ++i)
+            // {
+            //     for (int j = 0; j < 3; ++j)
+            //     {
+            //         std::cout << H2O_coords[i][j] << " ";
+            //     }
+            //     std::cout << "\n";
+            // }
 
             int ind[7] = {0, 2, 0, 1, 3, 2, 1};
             char type[7] = {'s', 's', 'h', 's', 's', 'h', 'h'};
@@ -800,31 +900,22 @@ void displayCallback(void)
                         product_coords[i][j] = H2O_coords[ind[i]][j];
                 }
             }
-            // for (int j = 0; j < 3; ++j)
-            // {
-            //     product_coords[0][j] = SO3_coords[0][j];
-            // }
 
-            // for (int j = 0; j < 3; ++j)
+            // std::cout << "Product:\n";
+            // for (int i = 0; i < 7; ++i)
             // {
-            //     product_coords[1][j] = SO3_coords[2][j];
+            //     for (int j = 0; j < 3; ++j)
+            //     {
+            //         std::cout << product_coords[i][j] << " ";
+            //     }
+            //     std::cout << "\n";
             // }
-
-            std::cout << "Product:\n";
-            for (int i = 0; i < 7; ++i)
-            {
-                for (int j = 0; j < 3; ++j)
-                {
-                    std::cout << product_coords[i][j] << " ";
-                }
-                std::cout << "\n";
-            }
 
             for (int i = 0; i < 7; ++i)
             {
                 for (int j = 0; j < 3; ++j)
                 {
-                    deltas[i][j] = (product_coords[i][j] - H2SO4_coords[i][j]) / (t3 - t2);
+                    deltas[i][j] = (H2SO4_coords[i][j] - product_coords[i][j]) / (t3 - t2);
                 }
             }
             merge = 1;
@@ -836,6 +927,14 @@ void displayCallback(void)
     {
         draw_product();
     }
+    if (time_cnt == t3)
+    {
+        draw_SO3();
+        draw_H2O();
+        draw_plus();
+        draw_arrow();
+    }
+    // draw_product();
 
     glFlush();
 }
