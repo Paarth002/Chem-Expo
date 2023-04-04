@@ -12,7 +12,7 @@
 #include <GL/glut.h>
 
 int time_cnt = 0;
-int t1 = 135, t2 = 160, t3 = 700;
+int t1 = 135, t2 = 160, t3 = 500;
 
 /* Global Variables (Configs) */
 // Init options
@@ -81,8 +81,8 @@ GLint resolution = 100;
 GLint slices = resolution, stacks = resolution;
 
 // Animation variables
-int animation = 0, merge = 0, merge_cnt = 0, merge_pause = 30, to_print = 1, calc = 1;
-GLdouble SOcylinderRadius = 0;
+int animation = 0, merge = 0;
+GLdouble SOcylinderRadius = 0.1;
 GLdouble HOcylinderRadius = 0.2;
 GLdouble delta_HO = cylinderRadius / (t2 - t1);
 GLdouble delta_SO = delta_HO;
@@ -105,9 +105,7 @@ GLfloat sulphur[3] = {1, 0, 0};         //  (S - Red)
 GLfloat hydrogen[3] = {0.0, 0.0, 1.0};  // (H - Blue)
 GLfloat white[3] = {1.0, 1.0, 1.0};
 GLfloat black[3] = {1.0, 1.0, 1.0};
-GLfloat color_t1[3] = {0.0, 0.0, 0.0};
-GLfloat color_t2[3] = {1.0, 1.0, 1.0};
-GLfloat delta_color = 1.0 / (t2 - t1);
+
 /* Prototypes */
 void liaison(GLfloat color[3], GLfloat height);
 void draw_atom(GLfloat color[3]);
@@ -188,16 +186,17 @@ void draw_H2O()
 
     if (time_cnt < t2)
     {
-        glColor3fv(color_t2);
-        setLightColor(color_t2);
+        glColor3fv(white);
+        setLightColor(white);
         renderCylinder(H2O_coords[2][0], H2O_coords[2][1], H2O_coords[2][2],
                        H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2],
                        HOcylinderRadius, myQuad);
 
         if (time_cnt > t1)
         {
-            glColor3fv(color_t1);
-            setLightColor(color_t1);
+            HOcylinderRadius -= delta_HO;
+            glColor3fv(white);
+            setLightColor(white);
             renderCylinder(H2O_coords[2][0], H2O_coords[2][1], H2O_coords[2][2],
                            SO3_coords[2][0], SO3_coords[2][1], SO3_coords[2][2],
                            cylinderRadius - HOcylinderRadius, myQuad);
@@ -301,6 +300,16 @@ void draw_H2SO4()
 
 void draw_product()
 {
+    if (time_cnt > t2 && time_cnt < t3)
+    {
+        for (int i = 0; i < 7; ++i)
+        {
+            for (int j = 0; j < 3; ++j)
+            {
+                product_coords[i][j] = product_coords[i][j] += deltas[i][j];
+            }
+        }
+    }
 
     for (int i = 0; i < 7; i++)
     {
@@ -343,10 +352,7 @@ void translate_xyz(std::string s, GLfloat dx, GLfloat dy, GLfloat dz)
     std::map<std::string, int> molecules = {{"H2O", 0},
                                             {"SO3", 1},
                                             {"H2SO4", 2},
-                                            {"PA", 3},
-                                            {"Product", 4},
-                                            {"H2O_orig", 5},
-                                            {"SO3_orig", 6}};
+                                            {"PA", 3}};
 
     int ind = molecules[s];
 
@@ -382,30 +388,6 @@ void translate_xyz(std::string s, GLfloat dx, GLfloat dy, GLfloat dz)
             pa_coords[i][0] += dx;
             pa_coords[i][1] += dy;
             pa_coords[i][2] += dz;
-        }
-        break;
-    case 4:
-        for (int i = 0; i < 7; i++)
-        {
-            product_coords[i][0] += dx;
-            product_coords[i][1] += dy;
-            product_coords[i][2] += dz;
-        }
-        break;
-    case 5:
-        for (int i = 0; i < 3; i++)
-        {
-            H2O_orig_coords[i][0] += dx;
-            H2O_orig_coords[i][1] += dy;
-            H2O_orig_coords[i][2] += dz;
-        }
-        break;
-    case 6:
-        for (int i = 0; i < 4; i++)
-        {
-            SO3_orig_coords[i][0] += dx;
-            SO3_orig_coords[i][1] += dy;
-            SO3_orig_coords[i][2] += dz;
         }
         break;
     }
@@ -444,6 +426,7 @@ void reshape(int w, int h)
     glutPostRedisplay();
 }
 
+int calc = 1;
 void timer(int)
 {
     glutPostRedisplay();
@@ -457,70 +440,42 @@ void timer(int)
             translate_xyz("SO3", -0.01, 0, 0);
             time_cnt++;
             // std::cout << time_cnt << "\n";
-
-            if (time_cnt > t1)
-            {
-                for (int i = 0; i < 3; ++i)
-                {
-                    color_t1[i] += delta_color;
-                    color_t2[i] -= delta_color;
-                }
-                HOcylinderRadius -= delta_HO;
-                SOcylinderRadius += delta_SO;
-            }
         }
+    }
 
-        if (merge)
+    if (merge)
+    {
+        if (time_cnt < t3)
         {
-            if (time_cnt < t3)
+            time_cnt++;
+            // std::cout << time_cnt << "\n";
+        }
+        else if (time_cnt == t3 && calc)
+        {
+            calc = 0;
+            for (int i = 0; i < 3; ++i)
             {
-                time_cnt++;
-                // std::cout << time_cnt << "\n";
-                for (int i = 0; i < 7; ++i)
+                for (int j = 0; j < 3; ++j)
                 {
-                    for (int j = 0; j < 3; ++j)
-                    {
-                        product_coords[i][j] = product_coords[i][j] += deltas[i][j];
-                    }
+                    H2O_coords[i][j] = H2O_orig_coords[i][j];
                 }
             }
-            else if (time_cnt == t3 && calc)
-            {
-                calc = 0;
-                for (int i = 0; i < 3; ++i)
-                {
-                    for (int j = 0; j < 3; ++j)
-                    {
-                        H2O_coords[i][j] = H2O_orig_coords[i][j];
-                    }
-                }
 
-                for (int i = 0; i < 4; ++i)
+            for (int i = 0; i < 4; ++i)
+            {
+                for (int j = 0; j < 3; ++j)
                 {
-                    for (int j = 0; j < 3; ++j)
-                    {
-                        SO3_coords[i][j] = SO3_orig_coords[i][j];
-                    }
+                    SO3_coords[i][j] = SO3_orig_coords[i][j];
                 }
             }
         }
     }
 }
 
+int to_print = 1;
+
 int main(int argc, char *argv[])
 {
-
-    std::cout << "Menu: \n";
-    std::cout << "1. Enter : Start/Pause animation \n";
-    std::cout << "2. R     : Reset animation \n";
-    std::cout << "3. Esc   : Close Window \n";
-    std::cout << "4. A/D   : Translate along X-axis \n";
-    std::cout << "5. S/W   : Translate along Y-axis \n";
-    std::cout << "6. 5/8   : Translate along Z-axis \n";
-    std::cout << "7. +     : Add/Remove Axis \n";
-    std::cout << "8. -     : Change Lighting effect \n";
-    std::cout << "9. Mouse : Left Click and Drag : Rotate Axis \n";
-    std::cout << "9. Mouse : Hold Scroll and Drag: Zoom In/Out \n\n";
     /* perform initialization NOT OpenGL/GLUT dependent,
      as we haven't created a GLUT window yet */
     init();
@@ -768,9 +723,6 @@ void keyboardCallback(unsigned char key, int x, int y)
         translate_xyz("SO3", -delta, 0, 0);
         translate_xyz("H2SO4", -delta, 0, 0);
         translate_xyz("PA", -delta, 0, 0);
-        translate_xyz("Product", -delta, 0, 0);
-        translate_xyz("H2O_orig", -delta, 0, 0);
-        translate_xyz("SO3_orig", -delta, 0, 0);
     }
     if (key == 'w' || key == 'W')
     {
@@ -778,9 +730,6 @@ void keyboardCallback(unsigned char key, int x, int y)
         translate_xyz("SO3", 0, delta, 0);
         translate_xyz("H2SO4", 0, delta, 0);
         translate_xyz("PA", 0, delta, 0);
-        translate_xyz("Product", 0, delta, 0);
-        translate_xyz("H2O_orig", 0, delta, 0);
-        translate_xyz("SO3_orig", 0, delta, 0);
     }
     if (key == 's' || key == 'S')
     {
@@ -788,9 +737,6 @@ void keyboardCallback(unsigned char key, int x, int y)
         translate_xyz("SO3", 0, -delta, 0);
         translate_xyz("H2SO4", 0, -delta, 0);
         translate_xyz("PA", 0, -delta, 0);
-        translate_xyz("Product", 0, -delta, 0);
-        translate_xyz("H2O_orig", 0, -delta, 0);
-        translate_xyz("SO3_orig", 0, -delta, 0);
     }
     if (key == 'd' || key == 'D')
     {
@@ -798,9 +744,6 @@ void keyboardCallback(unsigned char key, int x, int y)
         translate_xyz("SO3", delta, 0, 0);
         translate_xyz("H2SO4", delta, 0, 0);
         translate_xyz("PA", delta, 0, 0);
-        translate_xyz("Product", delta, 0, 0);
-        translate_xyz("H2O_orig", delta, 0, 0);
-        translate_xyz("SO3_orig", delta, 0, 0);
     }
     if (key == '8')
     {
@@ -808,9 +751,6 @@ void keyboardCallback(unsigned char key, int x, int y)
         translate_xyz("SO3", 0, 0, delta);
         translate_xyz("H2SO4", 0, 0, delta);
         translate_xyz("PA", 0, 0, delta);
-        translate_xyz("Product", 0, 0, delta);
-        translate_xyz("H2O_orig", 0, 0, delta);
-        translate_xyz("SO3_orig", 0, 0, delta);
     }
     if (key == '5')
     {
@@ -818,9 +758,6 @@ void keyboardCallback(unsigned char key, int x, int y)
         translate_xyz("SO3", 0, 0, -delta);
         translate_xyz("H2SO4", 0, 0, -delta);
         translate_xyz("PA", 0, 0, -delta);
-        translate_xyz("Product", 0, 0, -delta);
-        translate_xyz("H2O_orig", 0, 0, -delta);
-        translate_xyz("SO3_orig", 0, 0, -delta);
     }
 
     if (key == '+')
@@ -831,31 +768,6 @@ void keyboardCallback(unsigned char key, int x, int y)
     if (key == '-')
     {
         lightEffect = 1 - lightEffect;
-    }
-
-    if (key == 'R' || key == 'r')
-    {
-        time_cnt = 0;
-        animation = 0;
-        merge = 0;
-        merge_cnt = 0;
-        to_print = 1;
-        calc = 1;
-        for (int i = 0; i < 3; ++i)
-        {
-            for (int j = 0; j < 3; ++j)
-            {
-                H2O_coords[i][j] = H2O_orig_coords[i][j];
-            }
-        }
-
-        for (int i = 0; i < 4; ++i)
-        {
-            for (int j = 0; j < 3; ++j)
-            {
-                SO3_coords[i][j] = SO3_orig_coords[i][j];
-            }
-        }
     }
 
     if (key == 13)
@@ -931,9 +843,14 @@ void displayCallback(void)
 
     if (time_cnt > t1 && time_cnt < t2)
     {
-        setLightColor(color_t1);
+        setLightColor(white);
         renderCylinder(H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2],
                        SO3_coords[0][0], SO3_coords[0][1], SO3_coords[0][2], SOcylinderRadius, myQuad);
+
+        if (SOcylinderRadius < cylinderRadius)
+        {
+            SOcylinderRadius += delta_SO;
+        }
     }
 
     if (time_cnt == t2)
@@ -945,15 +862,7 @@ void displayCallback(void)
         renderCylinder(H2O_coords[2][0], H2O_coords[2][1], H2O_coords[2][2],
                        SO3_coords[2][0], SO3_coords[2][1], SO3_coords[2][2],
                        cylinderRadius, myQuad);
-        // draw_H2SO4();
-        draw_H2O();
-        draw_SO3();
-
-        merge_cnt++;
-        if (merge_cnt == merge_pause)
-        {
-            merge = 1;
-        }
+        draw_H2SO4();
 
         if (to_print)
         {
@@ -1009,6 +918,7 @@ void displayCallback(void)
                     deltas[i][j] = (H2SO4_coords[i][j] - product_coords[i][j]) / (t3 - t2);
                 }
             }
+            merge = 1;
             to_print = 0;
         }
     }
