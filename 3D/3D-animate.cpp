@@ -82,7 +82,7 @@ GLint slices = resolution, stacks = resolution;
 
 // Animation variables
 int camera = 1;
-int animation = 0, merge = 0, merge_cnt = 0, merge_pause = 30, to_print = 1, calc = 1, is_rotate = 0;
+int animation = 0, merge = 0, merge_cnt = 0, merge_pause = 100, to_print = 1, calc = 1, is_rotate = 0;
 GLdouble rot_angle = 0;
 GLdouble SOcylinderRadius = 0;
 GLdouble HOcylinderRadius = 0.2;
@@ -188,7 +188,7 @@ void draw_H2O()
                    H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2],
                    cylinderRadius, myQuad);
 
-    if (time_cnt < t2)
+    if (time_cnt <= t2)
     {
         glColor3fv(color_t2);
         setLightColor(color_t2);
@@ -262,6 +262,13 @@ void draw_SO3()
     renderCylinder(SO3_coords[2][0], SO3_coords[2][1], SO3_coords[2][2],
                    SO3_coords[0][0], SO3_coords[0][1], SO3_coords[0][2],
                    cylinderRadius, myQuad);
+
+    if (time_cnt > t1 && time_cnt <= t2)
+    {
+        setLightColor(color_t1);
+        renderCylinder(H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2],
+                       SO3_coords[0][0], SO3_coords[0][1], SO3_coords[0][2], SOcylinderRadius, myQuad);
+    }
 }
 
 void draw_H2SO4()
@@ -675,43 +682,6 @@ void renderCylinder(float x1, float y1, float z1, float x2, float y2, float z2, 
     // glPopMatrix();
 }
 
-// void renderCylinder(float x1, float y1, float z1, float x2, float y2, float z2, float radius, GLUquadricObj *quadric)
-// {
-//     float vx = x2 - x1;
-//     float vy = y2 - y1;
-//     float vz = z2 - z1;
-//     float ax, rx, ry, rz;
-//     float len = sqrt(vx * vx + vy * vy + vz * vz);
-
-//     glPushMatrix();
-//     glTranslatef(x1, y1, z1);
-//     if (fabs(vz) < 0.0001)
-//     {
-//         glRotatef(90, 0, 1, 0);
-//         ax = 57.2957795 * -atan(vy / vx);
-//         if (vx < 0)
-//         {
-//             ax = -ax;
-//         }
-//         rx = 1;
-//         ry = 0;
-//         rz = 0;
-//     }
-//     else
-//     {
-//         ax = 57.2957795 * acos(vz / len);
-//         if (vz < 0.0)
-//             ax = -ax;
-//         rx = -vy * vz;
-//         ry = vx * vz;
-//         rz = 0;
-//     }
-//     glRotatef(ax, rx, ry, rz);
-//     gluQuadricOrientation(quadric, GLU_OUTSIDE);
-//     gluCylinder(quadric, radius, radius, len, slices, stacks);
-//     glPopMatrix();
-// }
-
 void drawAxis()
 {
 
@@ -737,7 +707,7 @@ void drawAxis()
     glEnd();
 
     glPopMatrix();
-    // Réactivation de la lumière
+
     glEnable(GL_LIGHTING);
 }
 
@@ -985,7 +955,7 @@ void displayCallback(void)
         draw_SO3();
         glPopMatrix();
     }
-    if (time_cnt > t1 && time_cnt < t2)
+    if (time_cnt > t1 && time_cnt <= t2)
     {
         double drx = (H2O_coords[0][0] + SO3_coords[0][0]) / 2;
         double dry = (H2O_coords[0][1] + SO3_coords[0][1]) / 2;
@@ -1015,31 +985,11 @@ void displayCallback(void)
 
     // draw_H2SO4();
 
-    GLUquadric *myQuad;
-    myQuad = gluNewQuadric();
-
-    if (time_cnt > t1 && time_cnt < t2)
-    {
-        setLightColor(color_t1);
-        renderCylinder(H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2],
-                       SO3_coords[0][0], SO3_coords[0][1], SO3_coords[0][2], SOcylinderRadius, myQuad);
-    }
-
     if (time_cnt == t2)
     {
-        setLightColor(white);
-        renderCylinder(H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2],
-                       SO3_coords[0][0], SO3_coords[0][1], SO3_coords[0][2],
-                       cylinderRadius, myQuad);
-        renderCylinder(H2O_coords[2][0], H2O_coords[2][1], H2O_coords[2][2],
-                       SO3_coords[2][0], SO3_coords[2][1], SO3_coords[2][2],
-                       cylinderRadius, myQuad);
-        // draw_H2SO4();
-        draw_H2O();
-        draw_SO3();
 
         merge_cnt++;
-        if (merge_cnt == merge_pause)
+        if (merge_cnt >= merge_pause)
         {
             merge = 1;
         }
