@@ -12,7 +12,7 @@
 #include <GL/glut.h>
 
 int time_cnt = 0;
-int t1 = 135, t2 = 160, t3 = 700;
+int t1 = 135, t2 = 160, t3 = 600;
 
 /* Global Variables (Configs) */
 // Init options
@@ -81,7 +81,9 @@ GLint resolution = 100;
 GLint slices = resolution, stacks = resolution;
 
 // Animation variables
-int animation = 0, merge = 0, merge_cnt = 0, merge_pause = 30, to_print = 1, calc = 1;
+int camera = 1;
+int animation = 0, merge = 0, merge_cnt = 0, merge_pause = 30, to_print = 1, calc = 1, is_rotate = 0;
+GLdouble rot_angle = 0;
 GLdouble SOcylinderRadius = 0;
 GLdouble HOcylinderRadius = 0.2;
 GLdouble delta_HO = cylinderRadius / (t2 - t1);
@@ -449,6 +451,13 @@ void timer(int)
     glutPostRedisplay();
     glutTimerFunc(1000 / 60, timer, 0);
 
+    if (is_rotate)
+    {
+        rot_angle += 2;
+        if (rot_angle > 360)
+            rot_angle -= 360;
+    }
+
     if (animation)
     {
         if (time_cnt < t2)
@@ -512,15 +521,16 @@ int main(int argc, char *argv[])
 
     std::cout << "Menu: \n";
     std::cout << "1. Enter : Start/Pause animation \n";
-    std::cout << "2. R     : Reset animation \n";
-    std::cout << "3. Esc   : Close Window \n";
-    std::cout << "4. A/D   : Translate along X-axis \n";
-    std::cout << "5. S/W   : Translate along Y-axis \n";
-    std::cout << "6. 5/8   : Translate along Z-axis \n";
-    std::cout << "7. +     : Add/Remove Axis \n";
-    std::cout << "8. -     : Change Lighting effect \n";
-    std::cout << "9. Mouse : Left Click and Drag : Rotate Axis \n";
-    std::cout << "9. Mouse : Hold Scroll and Drag: Zoom In/Out \n\n";
+    std::cout << "2. Space : Start/Pause rotation \n";
+    std::cout << "3. R     : Reset animation \n";
+    std::cout << "4. Esc   : Close Window \n";
+    std::cout << "5. A/D   : Translate along X-axis \n";
+    std::cout << "6. S/W   : Translate along Y-axis \n";
+    std::cout << "7. 5/8   : Translate along Z-axis \n";
+    std::cout << "8. +     : Add/Remove Axis \n";
+    std::cout << "9. -     : Change Lighting effect \n";
+    std::cout << "10. Mouse: Left Click and Drag : Rotate Axis \n";
+    std::cout << "11. Mouse: Hold Scroll and Drag: Zoom In/Out \n\n";
     /* perform initialization NOT OpenGL/GLUT dependent,
      as we haven't created a GLUT window yet */
     init();
@@ -823,6 +833,12 @@ void keyboardCallback(unsigned char key, int x, int y)
         translate_xyz("SO3_orig", 0, 0, -delta);
     }
 
+    if (key == 'c' || key == 'C')
+    {
+        camera = 1 + camera;
+        if (camera == 4)
+            camera = 1;
+    }
     if (key == '+')
     {
         drawThatAxis = 1 - drawThatAxis;
@@ -841,6 +857,15 @@ void keyboardCallback(unsigned char key, int x, int y)
         merge_cnt = 0;
         to_print = 1;
         calc = 1;
+        SOcylinderRadius = 0;
+        HOcylinderRadius = 0.2;
+
+        for (int i = 0; i < 3; ++i)
+        {
+            color_t1[i] = 0;
+            color_t2[i] = 1;
+        }
+
         for (int i = 0; i < 3; ++i)
         {
             for (int j = 0; j < 3; ++j)
@@ -863,6 +888,11 @@ void keyboardCallback(unsigned char key, int x, int y)
         animation = 1 - animation;
         std::cout << "Timer : " << time_cnt << std::endl;
     }
+
+    if (key == 32)
+    {
+        is_rotate = 1 - is_rotate;
+    }
     if (key == 27)
     {
         exit(0);
@@ -883,7 +913,22 @@ void displayCallback(void)
     glLoadIdentity();
 
     // gluLookAt(eyex, eyey, eyez, atx, aty, atz, upx, upy, upz);
-    gluLookAt(0, 0, 2, 0, 0, 0, 0, 1, 0);
+    if (camera == 1)
+    {
+        gluLookAt(0, 0, 2, 0, 0, 0, 0, 1, 0);
+    }
+    else if (camera == 2)
+    {
+        gluLookAt(0, 2, 0, 0, 0, 0, 1, 0, 0);
+    }
+    else if (camera == 3)
+    {
+        gluLookAt(0, 2, 0, 0, 0, 0, 0, 0, 1);
+    }
+    else
+    {
+        exit(0);
+    }
 
     // Motion Options
     glTranslatef(0.0, 0.0, -depth);
@@ -908,13 +953,57 @@ void displayCallback(void)
         glDisable(GL_LIGHT0);
     }
 
-    // draw_H2O();
-    // draw_SO3();
-
-    if (time_cnt < t2)
+    if (time_cnt == 0)
     {
+        glPushMatrix();
+        glTranslatef(H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2]);
+        glRotatef(rot_angle, -1, -1, -1);
+        glTranslatef(-H2O_coords[0][0], -H2O_coords[0][1], -H2O_coords[0][2]);
         draw_H2O();
+        glPopMatrix();
+
+        glPushMatrix();
+        glTranslatef(SO3_coords[0][0], SO3_coords[0][1], SO3_coords[0][2]);
+        glRotatef(rot_angle, -1, -1, -1);
+        glTranslatef(-SO3_coords[0][0], -SO3_coords[0][1], -SO3_coords[0][2]);
         draw_SO3();
+        glPopMatrix();
+    }
+    if (time_cnt > 0 && time_cnt <= t1)
+    {
+        glPushMatrix();
+        glTranslatef(H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2]);
+        glRotatef(rot_angle, -1, -1, -1);
+        glTranslatef(-H2O_coords[0][0], -H2O_coords[0][1], -H2O_coords[0][2]);
+        draw_H2O();
+        glPopMatrix();
+
+        glPushMatrix();
+        glTranslatef(SO3_coords[0][0], SO3_coords[0][1], SO3_coords[0][2]);
+        glRotatef(rot_angle, -1, -1, -1);
+        glTranslatef(-SO3_coords[0][0], -SO3_coords[0][1], -SO3_coords[0][2]);
+        draw_SO3();
+        glPopMatrix();
+    }
+    if (time_cnt > t1 && time_cnt < t2)
+    {
+        double drx = (H2O_coords[0][0] + SO3_coords[0][0]) / 2;
+        double dry = (H2O_coords[0][1] + SO3_coords[0][1]) / 2;
+        double drz = (H2O_coords[0][2] + SO3_coords[0][2]) / 2;
+
+        glPushMatrix();
+        glTranslatef(drx, dry, drz);
+        glRotatef(rot_angle, -1, -1, -1);
+        glTranslatef(-drx, -dry, -drz);
+        draw_H2O();
+        glPopMatrix();
+
+        glPushMatrix();
+        glTranslatef(drx, dry, drz);
+        glRotatef(rot_angle, -1, -1, -1);
+        glTranslatef(-drx, -dry, -drz);
+        draw_SO3();
+        glPopMatrix();
     }
 
     // int stop_plus = 120;
@@ -957,26 +1046,6 @@ void displayCallback(void)
 
         if (to_print)
         {
-            // std::cout << "SO3:\n";
-            // for (int i = 0; i < 4; ++i)
-            // {
-            //     for (int j = 0; j < 3; ++j)
-            //     {
-            //         std::cout << SO3_coords[i][j] << " ";
-            //     }
-            //     std::cout << "\n";
-            // }
-
-            // std::cout << "H2O:\n";
-            // for (int i = 0; i < 3; ++i)
-            // {
-            //     for (int j = 0; j < 3; ++j)
-            //     {
-            //         std::cout << H2O_coords[i][j] << " ";
-            //     }
-            //     std::cout << "\n";
-            // }
-
             int ind[7] = {0, 2, 0, 1, 3, 2, 1};
             char type[7] = {'s', 's', 'h', 's', 's', 'h', 'h'};
             // Type 's': atom from SO3, Typer 'h': atom from H2O
@@ -992,16 +1061,6 @@ void displayCallback(void)
                 }
             }
 
-            // std::cout << "Product:\n";
-            // for (int i = 0; i < 7; ++i)
-            // {
-            //     for (int j = 0; j < 3; ++j)
-            //     {
-            //         std::cout << product_coords[i][j] << " ";
-            //     }
-            //     std::cout << "\n";
-            // }
-
             for (int i = 0; i < 7; ++i)
             {
                 for (int j = 0; j < 3; ++j)
@@ -1013,14 +1072,38 @@ void displayCallback(void)
         }
     }
 
-    if (time_cnt > t2)
+    if (time_cnt > t2 && time_cnt < t3)
     {
+        glPushMatrix();
+        glTranslatef(product_coords[0][0], product_coords[0][1], product_coords[0][2]);
+        glRotatef(rot_angle, -1, -1, -1);
+        glTranslatef(-product_coords[0][0], -product_coords[0][1], -product_coords[0][2]);
         draw_product();
+        glPopMatrix();
     }
     if (time_cnt == t3)
     {
-        draw_SO3();
+        glPushMatrix();
+        glTranslatef(H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2]);
+        glRotatef(rot_angle, -1, -1, -1);
+        glTranslatef(-H2O_coords[0][0], -H2O_coords[0][1], -H2O_coords[0][2]);
         draw_H2O();
+        glPopMatrix();
+
+        glPushMatrix();
+        glTranslatef(SO3_coords[0][0], SO3_coords[0][1], SO3_coords[0][2]);
+        glRotatef(rot_angle, -1, -1, -1);
+        glTranslatef(-SO3_coords[0][0], -SO3_coords[0][1], -SO3_coords[0][2]);
+        draw_SO3();
+        glPopMatrix();
+
+        glPushMatrix();
+        glTranslatef(product_coords[0][0], product_coords[0][1], product_coords[0][2]);
+        glRotatef(rot_angle, -1, -1, -1);
+        glTranslatef(-product_coords[0][0], -product_coords[0][1], -product_coords[0][2]);
+        draw_product();
+        glPopMatrix();
+
         draw_plus();
         draw_arrow();
     }

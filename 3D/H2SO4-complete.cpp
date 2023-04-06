@@ -500,6 +500,12 @@ void displayCallback(void)
     }
 
     GLfloat cntr[3] = {0, 0, 0};
+    // draw_H2SO4(cntr);
+    glPushMatrix();
+    glTranslatef(3, 0, 0);
+    glRotatef(30, 0, 0, 1);
+    glTranslatef(-3, 0, 0);
     draw_H2SO4(cntr);
+    glPopMatrix();
     glFlush();
 }
