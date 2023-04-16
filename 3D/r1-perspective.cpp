@@ -70,7 +70,7 @@ GLfloat SO3_orig_coords[4][3] = {
 int selectedObject = 3;
 bool drawThatAxis = 0;
 bool lightEffect = 1;
-int drawLegend = 1;
+int drawLegend = 0;
 GLdouble sphereRadius = 0.4;
 GLdouble cylinderRadius = 0.2;
 GLint resolution = 100;
@@ -86,7 +86,7 @@ GLdouble delta_HO = cylinderRadius / (t2 - t1);
 GLdouble delta_SO = delta_HO;
 
 // Viewer options (GluLookAt)
-float fovy = 60.0, aspect = 1.0, zNear = 1.0, zFar = 5.0;
+float fovy = 60.0, aspect = 1.0, zNear = 1.0, zFar = 100.0;
 
 // Mouse modifiers
 float depth = 8;
@@ -929,34 +929,35 @@ void displayCallback(void)
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(fovy, aspect, zNear, zFar);
-
+    glOrtho(-7.0f, 7.0f, -7.0f, 7.0f, -7.0f, 7.0f);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+    glRotatef(35.264f, 1.0f, 0.0f, 0.0f);
+    glRotatef(-45.0f, 0.0f, 1.0f, 0.0f);
+    // gluLookAt(0, 0, 2, 0, 0, 0, 0, 1, 0);
+    // // displayLegend();
+    // // gluLookAt(eyex, eyey, eyez, atx, aty, atz, upx, upy, upz);
+    // if (camera == 1)
+    // {
+    //     gluLookAt(0, 0, 2, 0, 0, 0, 0, 1, 0);
+    // }
+    // else if (camera == 2)
+    // {
+    //     gluLookAt(0, 2, 0, 0, 0, 0, 1, 0, 0);
+    // }
+    // else if (camera == 3)
+    // {
+    //     gluLookAt(0, 2, 0, 0, 0, 0, 0, 0, 1);
+    // }
+    // else
+    // {
+    //     exit(0);
+    // }
 
-    // displayLegend();
-    // gluLookAt(eyex, eyey, eyez, atx, aty, atz, upx, upy, upz);
-    if (camera == 1)
-    {
-        gluLookAt(0, 0, 2, 0, 0, 0, 0, 1, 0);
-    }
-    else if (camera == 2)
-    {
-        gluLookAt(0, 2, 0, 0, 0, 0, 1, 0, 0);
-    }
-    else if (camera == 3)
-    {
-        gluLookAt(0, 2, 0, 0, 0, 0, 0, 0, 1);
-    }
-    else
-    {
-        exit(0);
-    }
-
-    // Motion Options
-    glTranslatef(0.0, 0.0, -depth);
-    glRotatef(-theta, 1.0, 0.0, 0.0);
-    glRotatef(phi, 0.0, 1.0, 0.0);
+    // // Motion Options
+    // glTranslatef(0.0, 0.0, -depth);
+    // glRotatef(-theta, 1.0, 0.0, 0.0);
+    // glRotatef(phi, 0.0, 1.0, 0.0);
 
     // Axis x, y and z Toggle
     if (drawThatAxis)
