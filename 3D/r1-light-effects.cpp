@@ -70,8 +70,8 @@ GLfloat SO3_orig_coords[4][3] = {
 int selectedObject = 3;
 bool drawThatAxis = 0;
 bool lightEffect = 1;
-int drawLegend = 0;
-int projection = 1;
+int drawLegend = 1;
+int lightOption = 1;
 GLdouble sphereRadius = 0.4;
 GLdouble cylinderRadius = 0.2;
 GLint resolution = 100;
@@ -154,10 +154,7 @@ void displayLegend()
     string legend_disp_7 = "Press + to Add/Remove Axis";
     // string legend_disp_8 = "Press - to Change Lighting effect";
     string legend_disp_9 = "Press Esc to Close Window";
-    string legend_disp_10 = "Press P to Change Projection";
-    string legend_disp_11 = "Press C to Change Camera";
-    string legend_disp_12 = "Press L to Change Light Effects";
-    string legend_disp_13 = "Press M to Toggle Legend";
+    string legend_disp_10 = "Press L to Toggle Legend";
 
     glRasterPos3f(4, 4.1, 0);
     for (int i = 0; i < legend_disp_1.size(); i++)
@@ -194,6 +191,11 @@ void displayLegend()
     {
         glutBitmapCharacter(GLUT_BITMAP_9_BY_15, legend_disp_7[i]);
     }
+    // glRasterPos3f(4, 2, 0);
+    // for (int i = 0; i < legend_disp_8.size(); i++)
+    // {
+    //     glutBitmapCharacter(GLUT_BITMAP_9_BY_15, legend_disp_8[i]);
+    // }
     glRasterPos3f(4, 2, 0);
     for (int i = 0; i < legend_disp_9.size(); i++)
     {
@@ -203,21 +205,6 @@ void displayLegend()
     for (int i = 0; i < legend_disp_10.size(); i++)
     {
         glutBitmapCharacter(GLUT_BITMAP_9_BY_15, legend_disp_10[i]);
-    }
-    glRasterPos3f(4, 1.4, 0);
-    for (int i = 0; i < legend_disp_11.size(); i++)
-    {
-        glutBitmapCharacter(GLUT_BITMAP_9_BY_15, legend_disp_11[i]);
-    }
-    glRasterPos3f(4, 1.1, 0);
-    for (int i = 0; i < legend_disp_12.size(); i++)
-    {
-        glutBitmapCharacter(GLUT_BITMAP_9_BY_15, legend_disp_12[i]);
-    }
-    glRasterPos3f(4, 0.8, 0);
-    for (int i = 0; i < legend_disp_11.size(); i++)
-    {
-        glutBitmapCharacter(GLUT_BITMAP_9_BY_15, legend_disp_13[i]);
     }
     glPopMatrix();
     // glFlush();
@@ -250,6 +237,7 @@ void draw_arrow()
 void draw_H2O()
 {
 
+    // displayLegend();
     for (int i = 0; i < 3; i++)
     {
         glPushMatrix();
@@ -679,13 +667,73 @@ void draw_atom(GLfloat color[3])
 void setLightColor(GLfloat light_color[3])
 {
     // Light Options
-    GLfloat mat_specular[] = {1.0, 1.0, 1.0, 1.0};
-    GLfloat shine[] = {100.0};
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, light_color);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
-    glMaterialfv(GL_FRONT, GL_SHININESS, shine);
+
+    if (lightOption == 1){
+        GLfloat light_ambient[] = { 0.0, 0.0, 0.0, 1.0 };
+        GLfloat light_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
+        GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+        GLfloat light_position[] = { 0.0, 0.0, 1.0, 0.0 };
+
+        glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, light_color);
+        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    }
+    else if (lightOption == 2){
+        GLfloat light_ambient[] = { 0.0, 0.0, 0.0, 1.0 };
+        GLfloat light_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
+        GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+        GLfloat light_position[] = { 0.0, 0.0, 1.0, 0.0 };
+
+        glLightfv(GL_LIGHT0, GL_AMBIENT, light_color);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, light_color);
+        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    }
+    else if (lightOption == 3){
+        GLfloat mat_specular[] = {1.0, 1.0, 1.0, 1.0};
+        GLfloat shine[] = {100.0};
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, light_color);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
+        glMaterialfv(GL_FRONT, GL_SHININESS, shine);
+    }
+    else if(lightOption == 4){
+        GLfloat light_ambient[] = { 0.0, 0.0, 0.0, 1.0 };
+        GLfloat light_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
+        GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+        GLfloat light_position[] = { 1.0, 0.0, 0.0, 0.0 };
+
+        glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, light_color);
+        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    }
+    else if(lightOption==5){
+        GLfloat light_ambient[] = { 0.0, 0.0, 0.0, 1.0 };
+        GLfloat light_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
+        GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+        GLfloat light_position[] = { 0.0, 1.0, 0.0, 0.0 };
+
+        glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, light_color);
+        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    }
+    else{
+        GLfloat light_ambient[] = { 0.0, 0.0, 0.0, 1.0 };
+        GLfloat light_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
+        GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+        GLfloat light_position[] = { 1.0, 5.0, -6.0, 0.0 };
+
+        glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, light_color);
+        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    }
 }
+
+
 
 void renderCylinder(float x1, float y1, float z1, float x2, float y2, float z2, float radius, GLUquadricObj *quadric)
 {
@@ -867,10 +915,10 @@ void keyboardCallback(unsigned char key, int x, int y)
     if (key == 'c' || key == 'C')
     {
         camera = 1 + camera;
-        if (camera == 6)
+        if (camera == 4)
             camera = 1;
     }
-    if (key == 'M' || key == 'm')
+    if (key == 'L' || key == 'l')
     {
         drawLegend = 1 - drawLegend;
     }
@@ -882,13 +930,6 @@ void keyboardCallback(unsigned char key, int x, int y)
     if (key == '-')
     {
         lightEffect = 1 - lightEffect;
-    }
-
-    if (key == 'p' || key == 'P')
-    {
-        projection++;
-        if (projection == 5)
-            projection = 1;
     }
 
     if (key == 'R' || key == 'r')
@@ -925,6 +966,15 @@ void keyboardCallback(unsigned char key, int x, int y)
         }
     }
 
+    if (key == '0'){
+        lightOption++;
+        if (lightOption == 6) lightOption = 1;
+    }
+    if (key == '9'){
+        lightOption--;
+        if (lightOption == 6) lightOption = 1;
+    }
+
     if (key == 13)
     {
         animation = 1 - animation;
@@ -947,122 +997,36 @@ void displayCallback(void)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Perspective projection
-    if (projection == 1)
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(fovy, aspect, zNear, zFar);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    // displayLegend();
+    // gluLookAt(eyex, eyey, eyez, atx, aty, atz, upx, upy, upz);
+    if (camera == 1)
     {
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        gluPerspective(fovy, aspect, zNear, zFar);
-
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-
-        // Point source of perspective projection
-        if (camera == 1)
-        {
-            gluLookAt(0, 0, 2, 0, 0, 0, 0, 1, 0);
-        }
-        else if (camera == 2)
-        {
-            gluLookAt(0, 0.8, 2, 0, 0, 0, 0, 1, 0);
-        }
-        else if (camera == 3)
-        {
-            gluLookAt(0, -0.8, 2, 0, 0, 0, 0, 1, 0);
-        }
-        else if (camera == 4)
-        {
-            gluLookAt(0, 0, 5, 0, 0, 0, 0, 1, 0);
-        }
-        else if (camera == 5)
-        {
-        }
-        else
-        {
-            exit(0);
-        }
-
-        // Motion Options
-        glTranslatef(0.0, 0.0, -depth);
-        glRotatef(-theta, 1.0, 0.0, 0.0);
-        glRotatef(phi, 0.0, 1.0, 0.0);
+        gluLookAt(0, 0, 2, 0, 0, 0, 0, 1, 0);
+    }
+    else if (camera == 2)
+    {
+        gluLookAt(0, 2, 0, 0, 0, 0, 1, 0, 0);
+    }
+    else if (camera == 3)
+    {
+        gluLookAt(0, 2, 0, 0, 0, 0, 0, 0, 1);
+    }
+    else
+    {
+        exit(0);
     }
 
-    else if (projection == 2) // Isometric
-    {
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-
-        double ratio = (double)width / (double)height;
-        int w = 7;
-
-        glOrtho(-w * ratio, w * ratio, -w, w, -10, 20);
-        // glOrtho(-7.0f, 7.0f, -7.0f, 7.0f, -7.0f, 15.0f);
-
-        glTranslatef(0.0, 0.0, -depth);
-        glRotatef(-theta, 1.0, 0.0, 0.0);
-        glRotatef(phi, 0.0, 1.0, 0.0);
-
-        glRotatef(35.264f, 1.0f, 0.0f, 0.0f);
-        glRotatef(-45.0f, 0.0f, 1.0f, 0.0f);
-
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-    }
-
-    else if (projection == 3) // cavalier
-    {
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        double alpha_d = 45;
-        double alpha = alpha * 3.14159 / 180;
-        double cavalier[] = {
-            1, 0, -1 * cos(alpha), 0,
-            0, 1, -1 * sin(alpha), 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1};
-
-        double ratio = (double)width / (double)height;
-        int w = 7;
-
-        glOrtho(-w * ratio, w * ratio, -w, w, -10, 20);
-
-        glTranslatef(0.0, 0.0, -depth);
-        glRotatef(-theta, 1.0, 0.0, 0.0);
-        glRotatef(phi, 0.0, 1.0, 0.0);
-
-        glMultTransposeMatrixd(cavalier);
-
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-    }
-
-    else if (projection == 4) // Cabinet
-    {
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        double alpha_d = 63.4;
-        double alpha = alpha * 3.14159 / 180;
-        double cavalier[] = {
-            1, 0, 0.5 * cos(alpha), 0,
-            0, 1, 0.5 * sin(alpha), 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1};
-
-        double ratio = (double)width / (double)height;
-        int w = 7;
-
-        glOrtho(-w * ratio, w * ratio, -w, w, -10, 20);
-
-        glTranslatef(0.0, 0.0, -depth);
-        glRotatef(-theta, 1.0, 0.0, 0.0);
-        glRotatef(phi, 0.0, 1.0, 0.0);
-
-        glMultTransposeMatrixd(cavalier);
-
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-    }
+    // Motion Options
+    glTranslatef(0.0, 0.0, -depth);
+    glRotatef(-theta, 1.0, 0.0, 0.0);
+    glRotatef(phi, 0.0, 1.0, 0.0);
 
     // Axis x, y and z Toggle
     if (drawThatAxis)
@@ -1109,6 +1073,7 @@ void displayCallback(void)
     }
     if (time_cnt > 0 && time_cnt <= t1)
     {
+        // displayLegend();
         glPushMatrix();
         glTranslatef(H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2]);
         glRotatef(rot_angle, -1, -1, -1);
@@ -1125,6 +1090,7 @@ void displayCallback(void)
     }
     if (time_cnt > t1 && time_cnt <= t2)
     {
+        // displayLegend();
         double drx = (H2O_coords[0][0] + SO3_coords[0][0]) / 2;
         double dry = (H2O_coords[0][1] + SO3_coords[0][1]) / 2;
         double drz = (H2O_coords[0][2] + SO3_coords[0][2]) / 2;
@@ -1147,6 +1113,7 @@ void displayCallback(void)
     // int stop_plus = 120;
     if (time_cnt < 40)
     {
+        // displayLegend();
         draw_plus();
         draw_arrow();
     }
@@ -1155,6 +1122,7 @@ void displayCallback(void)
 
     if (time_cnt == t2)
     {
+        // displayLegend();
         merge_cnt++;
         if (merge_cnt >= merge_pause)
         {
@@ -1191,6 +1159,7 @@ void displayCallback(void)
 
     if (time_cnt > t2 && time_cnt < t3)
     {
+        // displayLegend();
         glPushMatrix();
         glTranslatef(product_coords[0][0], product_coords[0][1], product_coords[0][2]);
         glRotatef(rot_angle, -1, -1, -1);
@@ -1200,6 +1169,7 @@ void displayCallback(void)
     }
     if (time_cnt == t3)
     {
+        // displayLegend();
         glPushMatrix();
         glTranslatef(H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2]);
         glRotatef(rot_angle, -1, -1, -1);
@@ -1224,6 +1194,9 @@ void displayCallback(void)
         draw_plus();
         draw_arrow();
     }
+    // draw_product();
 
+    // setLightColor(white);
+    // displayLegend();
     glFlush();
 }

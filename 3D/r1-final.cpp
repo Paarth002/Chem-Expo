@@ -70,7 +70,8 @@ GLfloat SO3_orig_coords[4][3] = {
 int selectedObject = 3;
 bool drawThatAxis = 0;
 bool lightEffect = 1;
-int drawLegend = 0;
+int drawLegend = 1;
+int lightOption = 1;
 int projection = 1;
 GLdouble sphereRadius = 0.4;
 GLdouble cylinderRadius = 0.2;
@@ -606,9 +607,13 @@ int main(int argc, char *argv[])
     std::cout << "6. S/W   : Translate along Y-axis \n";
     std::cout << "7. 5/8   : Translate along Z-axis \n";
     std::cout << "8. +     : Add/Remove Axis \n";
-    std::cout << "9. -     : Change Lighting effect \n";
-    std::cout << "10. Mouse: Left Click and Drag : Rotate Axis \n";
-    std::cout << "11. Mouse: Hold Scroll and Drag: Zoom In/Out \n\n";
+    std::cout << "9. P     : Change Projection\n";
+    std::cout << "10. C    : Change Camera \n";
+    std::cout << "11. L    : Change Light Effects \n";
+    std::cout << "12. M    : Toggle Legend \n";
+    std::cout << "13. Mouse: Left Click and Drag : Rotate Axis \n";
+    std::cout << "14. Mouse: Hold Scroll and Drag: Zoom In/Out \n";
+
     /* perform initialization NOT OpenGL/GLUT dependent,
      as we haven't created a GLUT window yet */
     init();
@@ -679,12 +684,79 @@ void draw_atom(GLfloat color[3])
 void setLightColor(GLfloat light_color[3])
 {
     // Light Options
-    GLfloat mat_specular[] = {1.0, 1.0, 1.0, 1.0};
-    GLfloat shine[] = {100.0};
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, light_color);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
-    glMaterialfv(GL_FRONT, GL_SHININESS, shine);
+
+    if (lightOption == 1)
+    {
+        GLfloat mat_specular[] = {1.0, 1.0, 1.0, 1.0};
+        // GLfloat light_position[] = {0.0, 0.0, 0.0, 0.0};
+        GLfloat shine[] = {100.0};
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+        // glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, light_color);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
+        // glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+        glMaterialfv(GL_FRONT, GL_SHININESS, shine);
+    }
+    else if (lightOption == 2)
+    {
+        GLfloat light_ambient[] = {0.0, 0.0, 0.0, 1.0};
+        GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};
+        GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};
+        GLfloat light_position[] = {0.0, 0.0, 1.0, 0.0};
+
+        glLightfv(GL_LIGHT0, GL_AMBIENT, light_color);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, light_color);
+        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    }
+    else if (lightOption == 3)
+    {
+        GLfloat light_ambient[] = {0.0, 0.0, 0.0, 1.0};
+        GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};
+        GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};
+        GLfloat light_position[] = {0.0, 0.0, 1.0, 0.0};
+
+        glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, light_color);
+        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    }
+    else if (lightOption == 4)
+    {
+        GLfloat light_ambient[] = {0.0, 0.0, 0.0, 1.0};
+        GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};
+        GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};
+        GLfloat light_position[] = {1.0, 0.0, 0.0, 0.0};
+
+        glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, light_color);
+        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    }
+    else if (lightOption == 5)
+    {
+        GLfloat light_ambient[] = {0.0, 0.0, 0.0, 1.0};
+        GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};
+        GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};
+        GLfloat light_position[] = {0.0, 1.0, 0.0, 0.0};
+
+        glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, light_color);
+        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    }
+    else
+    {
+        GLfloat light_ambient[] = {0.0, 0.0, 0.0, 1.0};
+        GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};
+        GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};
+        GLfloat light_position[] = {1.0, 5.0, -6.0, 0.0};
+
+        glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, light_color);
+        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    }
 }
 
 void renderCylinder(float x1, float y1, float z1, float x2, float y2, float z2, float radius, GLUquadricObj *quadric)
@@ -882,6 +954,14 @@ void keyboardCallback(unsigned char key, int x, int y)
     if (key == '-')
     {
         lightEffect = 1 - lightEffect;
+    }
+
+    if (key == 'L' || key == 'l')
+    {
+        if (lightOption == 6)
+            lightOption = 1;
+        else
+            lightOption++;
     }
 
     if (key == 'p' || key == 'P')

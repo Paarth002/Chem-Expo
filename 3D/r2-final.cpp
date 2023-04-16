@@ -13,29 +13,28 @@
 using namespace std;
 #include <GL/glut.h>
 
-int time_cnt = 0;
-int t1 = 135, t2 = 160, t3 = 600;
+// Global Variables
+GLfloat cyclopentane_coords[6][3] = {
+    {-6.25, 0, 0},
+    {-5.25, 1.299038106, 0},
+    {-4.25, 0, 0},
+    {-4.25, -1.5, 0},
+    {-6.25, -1.5, 0},
+    {-3.25, 1.299038106, 0}};
 
-GLfloat H2O_coords[3][3] = {
-    {-5, 0, 0},
-    {-5.81, 1.18, 0},
-    {-5.81, -1.18, 0}};
-
-GLfloat SO3_coords[4][3] = {
-    {0, 0, 0},
-    {0, 1.5, 0},
-    {-1.299038106, -0.75, 0},
-    {1.299038106, -0.75, 0},
+GLfloat HBr_coords[2][3] = {
+    {-0.25, 0.9, 0},
+    {-0.25, -0.9, 0},
 };
 
-GLfloat H2SO4_coords[7][3] = {
-    {5.2, 0, 0},
-    {6.2, 1, 1},
-    {6.2, -1, -1},
-    {4.2, -1, 1},
-    {4.2, 1, -1},
-    {7.2, 1, 1},
-    {7.2, -1, -1}};
+GLfloat bromocyclopentane_coords[7][3] = {
+    {3.75, 0, 0},
+    {4.75, 1.299038106, 0},
+    {5.75, 0, 0},
+    {5.75, -1.5, 0},
+    {3.75, -1.5, 0},
+    {6.4, 0.8, 0.5},
+    {6.75, -0.599038106, -0.3}};
 
 GLfloat product_coords[7][3] = {
     {0, 0, 0},
@@ -55,36 +54,52 @@ GLfloat deltas[7][3] = {
     {0, 0, 0},
     {0, 0, 0}};
 
-GLfloat H2O_orig_coords[3][3] = {
-    {-5, 0, 0},
-    {-5.81, 1.18, 0},
-    {-5.81, -1.18, 0}};
+GLfloat pa_coords[8][3] = {
+    {-3, 0, 0},
+    {-2, 0, 0},
+    {-2.5, -0.5, 0},
+    {-2.5, 0.5, 0},
+    {1.5, 0, 0},
+    {2.5, 0, 0},
+    {2.146446609, 0.353553391, 0},
+    {2.146446609, -0.353553391, 0}};
 
-GLfloat SO3_orig_coords[4][3] = {
-    {0, 0, 0},
-    {0, 1.5, 0},
-    {-1.299038106, -0.75, 0},
-    {1.299038106, -0.75, 0},
+GLfloat cyclopentane_orig_coords[6][3] = {
+    {-6.25, 0, 0},
+    {-5.25, 1.299038106, 0},
+    {-4.25, 0, 0},
+    {-4.25, -1.5, 0},
+    {-6.25, -1.5, 0},
+    {-3.25, 1.299038106, 0}};
+
+GLfloat HBr_orig_coords[2][3] = {
+    {-0.25, 0.9, 0},
+    {-0.25, -0.9, 0},
 };
 
 int selectedObject = 3;
 bool drawThatAxis = 0;
 bool lightEffect = 1;
-int drawLegend = 0;
+int lightOption = 1;
 int projection = 1;
+int drawLegend = 1;
 GLdouble sphereRadius = 0.4;
 GLdouble cylinderRadius = 0.2;
 GLint resolution = 100;
 GLint slices = resolution, stacks = resolution;
 
+// defining time counters for the animation.
+int time_cnt = 0;
+int t1 = 135, t2 = 155, t3 = 500;
+
 // Animation variables
 int camera = 1;
 int animation = 0, merging = 0, merge_cnt = 0, merge_pause = 20, to_print = 1, calc = 1, is_rotate = 0;
 GLdouble rot_angle = 0;
-GLdouble SOcylinderRadius = 0;
-GLdouble HOcylinderRadius = 0.2;
-GLdouble delta_HO = cylinderRadius / (t2 - t1);
-GLdouble delta_SO = delta_HO;
+GLdouble CBrcylinderRadius = 0;
+GLdouble HBrcylinderRadius = 0.2;
+GLdouble delta_HBr = cylinderRadius / (t2 - t1);
+GLdouble delta_CBr = delta_HBr;
 
 // Viewer options (GluLookAt)
 float fovy = 60.0, aspect = 1.0, zNear = 1.0, zFar = 100.0;
@@ -99,16 +114,16 @@ bool leftButton = false, middleButton = false;
 GLfloat oxygen[3] = {1.0, 0.5, 0.0};    // (O - Golden)
 GLfloat nitrogen[3] = {0.5, 0.3, 0.5};  // (N - Blue)
 GLfloat phosphate[3] = {1.0, 0.5, 0.0}; // (P - Orange)
-GLfloat carbon[3] = {0.5, 0.5, 0.5};    // (C - Grey)
-GLfloat sulphur[3] = {1, 0, 0};         //  (S - Red)
+GLfloat carbon[3] = {0.7, 0.5, 0.7};    // (C - Grey)
+GLfloat bromine[3] = {1, 0, 0};         //  (S - Red)
 GLfloat hydrogen[3] = {0.0, 0.0, 1.0};  // (H - Blue)
 GLfloat white[3] = {1.0, 1.0, 1.0};
-GLfloat black[3] = {1.0, 1.0, 1.0};
+GLfloat black[3] = {0.0, 0.0, 0.0};
 GLfloat color_t1[3] = {0.0, 0.0, 0.0};
 GLfloat color_t2[3] = {1.0, 1.0, 1.0};
 GLfloat delta_color = 1.0 / (t2 - t1);
+
 /* Prototypes */
-void liaison(GLfloat color[3], GLfloat height);
 void draw_atom(GLfloat color[3]);
 void setLightColor(GLfloat light_color[3]);
 void renderCylinder(float x1, float y1, float z1, float x2, float y2, float z2, float radius, GLUquadricObj *quadrilc);
@@ -121,17 +136,6 @@ void displayCallback(void);
 void buildDisplayList();
 void options_menu(int input);
 void initMenu();
-
-GLfloat pa_coords[9][3] = {
-    {-3.5, 0, 0},
-    {-2.5, 0, 0},
-    {-3, -0.5, 0},
-    {-3, 0.5, 0},
-    {2.5, 0, 0},
-    {3.5, 0, 0},
-    {3.146446609, 0.353553391, 0},
-    {3.5, 0, 0},
-    {3.146446609, -0.353553391, 0}};
 
 void displayLegend()
 {
@@ -223,243 +227,235 @@ void displayLegend()
     // glFlush();
 }
 
-void draw_plus()
+void draw_plus_arrow()
 {
     // plus
     GLUquadric *myQuad;
     myQuad = gluNewQuadric();
 
-    setLightColor(nitrogen);
+    setLightColor(oxygen);
     renderCylinder(pa_coords[0][0], pa_coords[0][1], pa_coords[0][2], pa_coords[1][0], pa_coords[1][1], pa_coords[1][2], 0.1, myQuad);
     renderCylinder(pa_coords[2][0], pa_coords[2][1], pa_coords[2][2], pa_coords[3][0], pa_coords[3][1], pa_coords[3][2], 0.1, myQuad);
-}
-
-void draw_arrow()
-{
-    // plus
-    GLUquadric *myQuad;
-    myQuad = gluNewQuadric();
 
     // arrow
-    setLightColor(nitrogen);
+    myQuad = gluNewQuadric();
+
+    setLightColor(oxygen);
     renderCylinder(pa_coords[4][0], pa_coords[4][1], pa_coords[4][2], pa_coords[5][0], pa_coords[5][1], pa_coords[5][2], 0.1, myQuad);
     renderCylinder(pa_coords[6][0], pa_coords[6][1], pa_coords[6][2], pa_coords[5][0], pa_coords[5][1], pa_coords[5][2], 0.1, myQuad);
-    renderCylinder(pa_coords[8][0], pa_coords[8][1], pa_coords[8][2], pa_coords[5][0], pa_coords[5][1], pa_coords[5][2], 0.1, myQuad);
+    renderCylinder(pa_coords[7][0], pa_coords[7][1], pa_coords[7][2], pa_coords[5][0], pa_coords[5][1], pa_coords[5][2], 0.1, myQuad);
 }
-
-void draw_H2O()
+void draw_cyclopentane(GLfloat center[3])
 {
-
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 6; i++)
     {
         glPushMatrix();
-        glTranslatef(H2O_coords[i][0], H2O_coords[i][1], H2O_coords[i][2]);
-        if (i == 0)
-            draw_atom(oxygen);
-        else
-            draw_atom(hydrogen);
+        glTranslatef(cyclopentane_coords[i][0], cyclopentane_coords[i][1], cyclopentane_coords[i][2]);
+        draw_atom(carbon);
         glPopMatrix();
     }
 
     GLUquadric *myQuad;
     myQuad = gluNewQuadric();
 
-    glColor3fv(white);
-    setLightColor(white);
-    renderCylinder(H2O_coords[1][0], H2O_coords[1][1], H2O_coords[1][2],
-                   H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2],
+    for (int i = 0; i < 5; i++)
+    {
+        setLightColor(white);
+        if (i == 0)
+        {
+            renderCylinder(cyclopentane_coords[0][0], cyclopentane_coords[0][1], cyclopentane_coords[0][2], cyclopentane_coords[4][0], cyclopentane_coords[4][1], cyclopentane_coords[4][2],
+                           cylinderRadius, myQuad);
+        }
+        else if (i == 1 || i == 2 || i == 3)
+        {
+            renderCylinder(cyclopentane_coords[i - 1][0], cyclopentane_coords[i - 1][1], cyclopentane_coords[i - 1][2], cyclopentane_coords[i][0], cyclopentane_coords[i][1], cyclopentane_coords[i][2],
+                           cylinderRadius, myQuad);
+        }
+        else
+        {
+            renderCylinder(cyclopentane_coords[i][0], cyclopentane_coords[i][1], cyclopentane_coords[i][2],
+                           cyclopentane_coords[i - 1][0], cyclopentane_coords[i - 1][1], cyclopentane_coords[i - 1][2],
+                           cylinderRadius, myQuad);
+        }
+    }
+    renderCylinder(cyclopentane_coords[2][0], cyclopentane_coords[2][1], cyclopentane_coords[2][2],
+                   cyclopentane_coords[5][0], cyclopentane_coords[5][1], cyclopentane_coords[5][2],
                    cylinderRadius, myQuad);
+}
+
+void draw_HBr(GLfloat center[3])
+{
+    glPushMatrix();
+    glTranslatef(HBr_coords[0][0], HBr_coords[0][1], HBr_coords[0][2]);
+    draw_atom(hydrogen);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(HBr_coords[1][0], HBr_coords[1][1], HBr_coords[1][2]);
+    draw_atom(bromine);
+    glPopMatrix();
+
+    GLUquadric *myQuad;
+    myQuad = gluNewQuadric();
 
     if (time_cnt <= t2)
     {
         glColor3fv(color_t2);
         setLightColor(color_t2);
-        renderCylinder(H2O_coords[2][0], H2O_coords[2][1], H2O_coords[2][2],
-                       H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2],
-                       HOcylinderRadius, myQuad);
-
+        renderCylinder(HBr_coords[1][0], HBr_coords[1][1], HBr_coords[1][2],
+                       HBr_coords[0][0], HBr_coords[0][1], HBr_coords[0][2],
+                       HBrcylinderRadius, myQuad);
         if (time_cnt > t1)
         {
             glColor3fv(color_t1);
             setLightColor(color_t1);
-            renderCylinder(H2O_coords[2][0], H2O_coords[2][1], H2O_coords[2][2],
-                           SO3_coords[2][0], SO3_coords[2][1], SO3_coords[2][2],
-                           cylinderRadius - HOcylinderRadius, myQuad);
+            renderCylinder(cyclopentane_coords[2][0], cyclopentane_coords[2][1], cyclopentane_coords[2][2],
+                           HBr_coords[1][0], HBr_coords[1][1], HBr_coords[1][2],
+                           cylinderRadius - HBrcylinderRadius, myQuad);
         }
     }
-
     if (time_cnt == t3)
     {
         glColor3fv(white);
         setLightColor(white);
-        renderCylinder(H2O_coords[2][0], H2O_coords[2][1], H2O_coords[2][2],
-                       H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2],
+        renderCylinder(HBr_coords[1][0], HBr_coords[1][1], HBr_coords[1][2],
+                       HBr_coords[0][0], HBr_coords[0][1], HBr_coords[0][2],
                        cylinderRadius, myQuad);
     }
 }
 
-void draw_SO3()
-
+void draw_bromocyclopentane(GLfloat center[3])
 {
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 6; i++)
     {
         glPushMatrix();
-        glTranslatef(SO3_coords[i][0], SO3_coords[i][1], SO3_coords[i][2]);
-        if (i == 0)
-            draw_atom(sulphur);
-        else
-            draw_atom(oxygen);
+        glTranslatef(bromocyclopentane_coords[i][0], bromocyclopentane_coords[i][1], bromocyclopentane_coords[i][2]);
+        draw_atom(carbon);
         glPopMatrix();
     }
+    glPushMatrix();
+    glTranslatef(bromocyclopentane_coords[6][0], bromocyclopentane_coords[6][1], bromocyclopentane_coords[6][2]);
+    draw_atom(bromine);
+    glPopMatrix();
 
     GLUquadric *myQuad;
     myQuad = gluNewQuadric();
 
-    for (int i = 3; i < 4; i++)
+    for (int i = 0; i < 5; i++)
     {
-        glColor3fv(white);
         setLightColor(white);
-        renderCylinder(SO3_coords[0][0], SO3_coords[0][1], SO3_coords[0][2],
-                       SO3_coords[i][0], SO3_coords[i][1], SO3_coords[i][2],
-                       cylinderRadius, myQuad);
-    }
-
-    glColor3fv(white);
-    setLightColor(white);
-    renderCylinder(SO3_coords[1][0], SO3_coords[1][1], SO3_coords[1][2],
-                   SO3_coords[0][0], SO3_coords[0][1], SO3_coords[0][2],
-                   cylinderRadius, myQuad);
-
-    glColor3fv(white);
-    setLightColor(white);
-    renderCylinder(SO3_coords[2][0], SO3_coords[2][1], SO3_coords[2][2],
-                   SO3_coords[0][0], SO3_coords[0][1], SO3_coords[0][2],
-                   cylinderRadius, myQuad);
-
-    if (time_cnt > t1 && time_cnt <= t2)
-    {
-        setLightColor(color_t1);
-        renderCylinder(H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2],
-                       SO3_coords[0][0], SO3_coords[0][1], SO3_coords[0][2], SOcylinderRadius, myQuad);
-    }
-}
-
-void draw_H2SO4()
-{
-    for (int i = 0; i < 7; i++)
-    {
-        glPushMatrix();
-        glTranslatef(H2SO4_coords[i][0], H2SO4_coords[i][1], H2SO4_coords[i][2]);
         if (i == 0)
-            draw_atom(sulphur);
-        else if (i < 5)
-            draw_atom(oxygen);
-        else
-            draw_atom(hydrogen);
-        glPopMatrix();
-    }
-
-    GLUquadric *myQuad;
-    myQuad = gluNewQuadric();
-
-    for (int i = 1; i < 7; i++)
-    {
-        glColor3fv(white);
-        setLightColor(white);
-        if (i < 5)
         {
-            renderCylinder(H2SO4_coords[0][0], H2SO4_coords[0][1], H2SO4_coords[0][2],
-                           H2SO4_coords[i][0], H2SO4_coords[i][1], H2SO4_coords[i][2],
+            renderCylinder(bromocyclopentane_coords[0][0], bromocyclopentane_coords[0][1], bromocyclopentane_coords[0][2], bromocyclopentane_coords[4][0], bromocyclopentane_coords[4][1], bromocyclopentane_coords[4][2],
+                           cylinderRadius, myQuad);
+        }
+        else if (i == 1 || i == 2 || i == 3)
+        {
+            renderCylinder(bromocyclopentane_coords[i - 1][0], bromocyclopentane_coords[i - 1][1], bromocyclopentane_coords[i - 1][2], bromocyclopentane_coords[i][0], bromocyclopentane_coords[i][1], bromocyclopentane_coords[i][2],
                            cylinderRadius, myQuad);
         }
         else
         {
-            renderCylinder(H2SO4_coords[i - 4][0], H2SO4_coords[i - 4][1], H2SO4_coords[i - 4][2],
-                           H2SO4_coords[i][0], H2SO4_coords[i][1], H2SO4_coords[i][2],
+            renderCylinder(bromocyclopentane_coords[i][0], bromocyclopentane_coords[i][1], bromocyclopentane_coords[i][2],
+                           bromocyclopentane_coords[i - 1][0], bromocyclopentane_coords[i - 1][1], bromocyclopentane_coords[i - 1][2],
                            cylinderRadius, myQuad);
         }
     }
+    renderCylinder(bromocyclopentane_coords[2][0], bromocyclopentane_coords[2][1], bromocyclopentane_coords[2][2],
+                   bromocyclopentane_coords[5][0], bromocyclopentane_coords[5][1], bromocyclopentane_coords[5][2],
+                   cylinderRadius, myQuad);
+    renderCylinder(bromocyclopentane_coords[2][0], bromocyclopentane_coords[2][1], bromocyclopentane_coords[2][2],
+                   bromocyclopentane_coords[6][0], bromocyclopentane_coords[6][1], bromocyclopentane_coords[6][2],
+                   cylinderRadius, myQuad);
 }
 
 void draw_product()
 {
 
-    for (int i = 0; i < 7; i++)
+    for (int i = 0; i < 6; i++)
     {
         glPushMatrix();
         glTranslatef(product_coords[i][0], product_coords[i][1], product_coords[i][2]);
-        if (i == 0)
-            draw_atom(sulphur);
-        else if (i < 5)
-            draw_atom(oxygen);
-        else
-            draw_atom(hydrogen);
+        draw_atom(carbon);
         glPopMatrix();
     }
+    glPushMatrix();
+    glTranslatef(product_coords[6][0], product_coords[6][1], product_coords[6][2]);
+    draw_atom(bromine);
+    glPopMatrix();
 
     GLUquadric *myQuad;
     myQuad = gluNewQuadric();
 
-    for (int i = 1; i < 7; i++)
+    for (int i = 0; i < 5; i++)
     {
-        glColor3fv(white);
         setLightColor(white);
-        if (i < 5)
+        if (i == 0)
         {
-            renderCylinder(product_coords[0][0], product_coords[0][1], product_coords[0][2],
-                           product_coords[i][0], product_coords[i][1], product_coords[i][2],
+            renderCylinder(product_coords[0][0], product_coords[0][1], product_coords[0][2], product_coords[4][0], product_coords[4][1], product_coords[4][2],
+                           cylinderRadius, myQuad);
+        }
+        else if (i == 1 || i == 2 || i == 3)
+        {
+            renderCylinder(product_coords[i - 1][0], product_coords[i - 1][1], product_coords[i - 1][2], product_coords[i][0], product_coords[i][1], product_coords[i][2],
                            cylinderRadius, myQuad);
         }
         else
         {
-            renderCylinder(product_coords[i - 4][0], product_coords[i - 4][1], product_coords[i - 4][2],
-                           product_coords[i][0], product_coords[i][1], product_coords[i][2],
+            renderCylinder(product_coords[i][0], product_coords[i][1], product_coords[i][2],
+                           product_coords[i - 1][0], product_coords[i - 1][1], product_coords[i - 1][2],
                            cylinderRadius, myQuad);
         }
     }
+    renderCylinder(product_coords[2][0], product_coords[2][1], product_coords[2][2],
+                   product_coords[5][0], product_coords[5][1], product_coords[5][2],
+                   cylinderRadius, myQuad);
+    renderCylinder(product_coords[2][0], product_coords[2][1], product_coords[2][2],
+                   product_coords[6][0], product_coords[6][1], product_coords[6][2],
+                   cylinderRadius, myQuad);
 }
 
 void translate_xyz(std::string s, GLfloat dx, GLfloat dy, GLfloat dz)
 {
 
-    std::map<std::string, int> molecules = {{"H2O", 0},
-                                            {"SO3", 1},
-                                            {"H2SO4", 2},
+    std::map<std::string, int> molecules = {{"cyclopentane", 0},
+                                            {"HBr", 1},
+                                            {"bromocyclopentane", 2},
                                             {"PA", 3},
                                             {"Product", 4},
-                                            {"H2O_orig", 5},
-                                            {"SO3_orig", 6}};
+                                            {"cyclopentane_orig", 5},
+                                            {"HBr_orig", 6}};
 
     int ind = molecules[s];
 
     switch (ind)
     {
     case 0:
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 6; i++)
         {
-            H2O_coords[i][0] += dx;
-            H2O_coords[i][1] += dy;
-            H2O_coords[i][2] += dz;
+            cyclopentane_coords[i][0] += dx;
+            cyclopentane_coords[i][1] += dy;
+            cyclopentane_coords[i][2] += dz;
         }
         break;
     case 1:
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 2; i++)
         {
-            SO3_coords[i][0] += dx;
-            SO3_coords[i][1] += dy;
-            SO3_coords[i][2] += dz;
+            HBr_coords[i][0] += dx;
+            HBr_coords[i][1] += dy;
+            HBr_coords[i][2] += dz;
         }
         break;
     case 2:
         for (int i = 0; i < 7; i++)
         {
-            H2SO4_coords[i][0] += dx;
-            H2SO4_coords[i][1] += dy;
-            H2SO4_coords[i][2] += dz;
+            bromocyclopentane_coords[i][0] += dx;
+            bromocyclopentane_coords[i][1] += dy;
+            bromocyclopentane_coords[i][2] += dz;
         }
         break;
     case 3:
-        for (int i = 0; i < 9; i++)
+        for (int i = 0; i < 8; i++)
         {
             pa_coords[i][0] += dx;
             pa_coords[i][1] += dy;
@@ -475,19 +471,19 @@ void translate_xyz(std::string s, GLfloat dx, GLfloat dy, GLfloat dz)
         }
         break;
     case 5:
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 6; i++)
         {
-            H2O_orig_coords[i][0] += dx;
-            H2O_orig_coords[i][1] += dy;
-            H2O_orig_coords[i][2] += dz;
+            cyclopentane_orig_coords[i][0] += dx;
+            cyclopentane_orig_coords[i][1] += dy;
+            cyclopentane_orig_coords[i][2] += dz;
         }
         break;
     case 6:
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 2; i++)
         {
-            SO3_orig_coords[i][0] += dx;
-            SO3_orig_coords[i][1] += dy;
-            SO3_orig_coords[i][2] += dz;
+            HBr_orig_coords[i][0] += dx;
+            HBr_orig_coords[i][1] += dy;
+            HBr_orig_coords[i][2] += dz;
         }
         break;
     }
@@ -498,13 +494,10 @@ int wd;                 /* GLUT window handle */
 
 void init(void)
 {
-    width = 1280.0; /* initial window width and height, */
-    height = 800.0; /* within which we draw. */
+    width = 1280.0;
+    height = 800.0;
 }
 
-// Called when window is resized,
-// also when window is first created,
-// before the first call to display().
 void reshape(int w, int h)
 {
     /* save new screen dimensions */
@@ -527,7 +520,7 @@ void reshape(int w, int h)
 void timer(int)
 {
     glutPostRedisplay();
-    glutTimerFunc(1000 / 60, timer, 0);
+    glutTimerFunc(1000 / 120, timer, 0);
 
     if (is_rotate)
     {
@@ -540,8 +533,8 @@ void timer(int)
     {
         if (time_cnt < t2)
         {
-            translate_xyz("H2O", 0.01, 0, 0);
-            translate_xyz("SO3", -0.01, 0, 0);
+            translate_xyz("cyclopentane", 0.01, 0, 0);
+            translate_xyz("HBr", -0.01, 0, 0);
             time_cnt++;
             // std::cout << time_cnt << "\n";
 
@@ -552,8 +545,8 @@ void timer(int)
                     color_t1[i] += delta_color;
                     color_t2[i] -= delta_color;
                 }
-                HOcylinderRadius -= delta_HO;
-                SOcylinderRadius += delta_SO;
+                HBrcylinderRadius -= delta_HBr;
+                CBrcylinderRadius += delta_CBr;
             }
         }
 
@@ -574,19 +567,19 @@ void timer(int)
             else if (time_cnt == t3 && calc)
             {
                 calc = 0;
-                for (int i = 0; i < 3; ++i)
+                for (int i = 0; i < 6; ++i)
                 {
                     for (int j = 0; j < 3; ++j)
                     {
-                        H2O_coords[i][j] = H2O_orig_coords[i][j];
+                        cyclopentane_coords[i][j] = cyclopentane_orig_coords[i][j];
                     }
                 }
 
-                for (int i = 0; i < 4; ++i)
+                for (int i = 0; i < 2; ++i)
                 {
                     for (int j = 0; j < 3; ++j)
                     {
-                        SO3_coords[i][j] = SO3_orig_coords[i][j];
+                        HBr_coords[i][j] = HBr_orig_coords[i][j];
                     }
                 }
             }
@@ -596,7 +589,6 @@ void timer(int)
 
 int main(int argc, char *argv[])
 {
-
     std::cout << "Menu: \n";
     std::cout << "1. Enter : Start/Pause animation \n";
     std::cout << "2. Space : Start/Pause rotation \n";
@@ -606,35 +598,20 @@ int main(int argc, char *argv[])
     std::cout << "6. S/W   : Translate along Y-axis \n";
     std::cout << "7. 5/8   : Translate along Z-axis \n";
     std::cout << "8. +     : Add/Remove Axis \n";
-    std::cout << "9. -     : Change Lighting effect \n";
-    std::cout << "10. Mouse: Left Click and Drag : Rotate Axis \n";
-    std::cout << "11. Mouse: Hold Scroll and Drag: Zoom In/Out \n\n";
-    /* perform initialization NOT OpenGL/GLUT dependent,
-     as we haven't created a GLUT window yet */
-    init();
+    std::cout << "9. P     : Change Projection\n";
+    std::cout << "10. C    : Change Camera \n";
+    std::cout << "11. L    : Change Light Effects \n";
+    std::cout << "12. M    : Toggle Legend \n";
+    std::cout << "13. Mouse: Left Click and Drag : Rotate Axis \n";
+    std::cout << "14. Mouse: Hold Scroll and Drag: Zoom In/Out \n";
 
-    /* initialize GLUT, let it extract command-line
-     GLUT options that you may provide
-     - NOTE THE '&' BEFORE argc */
+    init(); // Initialization
     glutInit(&argc, argv);
-
-    /* specify the display to be single
-     buffered and color as RGBA values */
-
     glutInitDisplayMode(GLUT_DEPTH);
-
-    /* set the initial window size */
     glutInitWindowSize((int)width, (int)height);
-
-    /* create the window and store the handle to it */
-    wd = glutCreateWindow("Animation" /* title */);
-
-    /* --- register callbacks with GLUT --- */
-
-    /* register function to handle window resizes */
+    wd = glutCreateWindow("methyl-cyclopentane + HBr -> bromo-methyl-cyclopentane" /* title */);
     glutReshapeFunc(reshape);
     glutTimerFunc(0, timer, 0);
-
     setLightColor(white);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -643,21 +620,14 @@ int main(int argc, char *argv[])
     glEnable(GL_CULL_FACE);
     glClearColor(0.0, 0.0, 0.0, 0.0);
 
-    // buildDisplayList();
-
-    /* register function that draws in the window */
     glutDisplayFunc(displayCallback);
-
     // motion
     glutMouseFunc(mouseCallback);
     glutMotionFunc(motionCallback);
-
-    // exit with [esc] keyboard button
+    // keyboard functions
     glutKeyboardFunc(keyboardCallback);
-
     /* start the GLUT main loop */
     glutMainLoop();
-
     return 0;
 }
 
@@ -665,26 +635,97 @@ int main(int argc, char *argv[])
 void draw_atom(GLfloat color[3])
 {
 
+    // Set Sphere Color
     glColor3fv(color);
-
     setLightColor(color);
 
     GLUquadric *myQuad;
     myQuad = gluNewQuadric();
 
-    // creating the sphere
+    // Draw sphere
     gluSphere(myQuad, sphereRadius, slices, stacks);
 }
 
 void setLightColor(GLfloat light_color[3])
 {
     // Light Options
-    GLfloat mat_specular[] = {1.0, 1.0, 1.0, 1.0};
-    GLfloat shine[] = {100.0};
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, light_color);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
-    glMaterialfv(GL_FRONT, GL_SHININESS, shine);
+
+    // default
+    if (lightOption == 1)
+    {
+        GLfloat mat_specular[] = {1.0, 1.0, 1.0, 1.0};
+        GLfloat shine[] = {100.0};
+
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, light_color);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
+        glMaterialfv(GL_FRONT, GL_SHININESS, shine);
+    }
+    // from +z axiz and its own light
+    else if (lightOption == 2)
+    {
+        GLfloat light_ambient[] = {0.0, 0.0, 0.0, 1.0};
+        GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};
+        GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};
+        GLfloat light_position[] = {0.0, 0.0, 1.0, 0.0};
+
+        glLightfv(GL_LIGHT0, GL_AMBIENT, light_color);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, light_color);
+        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    }
+    // from +z axis
+    else if (lightOption == 3)
+    {
+        GLfloat light_ambient[] = {0.0, 0.0, 0.0, 1.0};
+        GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};
+        GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};
+        GLfloat light_position[] = {0.0, 0.0, 1.0, 0.0};
+
+        glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, light_color);
+        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    }
+    // from +x axis
+    else if (lightOption == 4)
+    {
+        GLfloat light_ambient[] = {0.0, 0.0, 0.0, 1.0};
+        GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};
+        GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};
+        GLfloat light_position[] = {1.0, 0.0, 0.0, 0.0};
+
+        glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, light_color);
+        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    }
+    // from +y axis
+    else if (lightOption == 5)
+    {
+        GLfloat light_ambient[] = {0.0, 0.0, 0.0, 1.0};
+        GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};
+        GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};
+        GLfloat light_position[] = {0.0, 1.0, 0.0, 0.0};
+
+        glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, light_color);
+        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    }
+    // random position
+    else
+    {
+        GLfloat light_ambient[] = {0.0, 0.0, 0.0, 1.0};
+        GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};
+        GLfloat light_specular[] = {1.0, 1.0, 1.0, 1.0};
+        GLfloat light_position[] = {1.0, 5.0, -6.0, 0.0};
+
+        glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
+        glLightfv(GL_LIGHT0, GL_SPECULAR, light_color);
+        glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    }
 }
 
 void renderCylinder(float x1, float y1, float z1, float x2, float y2, float z2, float radius, GLUquadricObj *quadric)
@@ -768,7 +809,6 @@ void drawAxis()
     glEnd();
 
     glPopMatrix();
-
     glEnable(GL_LIGHTING);
 }
 
@@ -805,63 +845,63 @@ void keyboardCallback(unsigned char key, int x, int y)
 
     if (key == 'a' || key == 'A')
     {
-        translate_xyz("H2O", -delta, 0, 0);
-        translate_xyz("SO3", -delta, 0, 0);
-        translate_xyz("H2SO4", -delta, 0, 0);
+        translate_xyz("cyclopentane", -delta, 0, 0);
+        translate_xyz("HBr", -delta, 0, 0);
+        translate_xyz("bromocyclopentane", -delta, 0, 0);
         translate_xyz("PA", -delta, 0, 0);
         translate_xyz("Product", -delta, 0, 0);
-        translate_xyz("H2O_orig", -delta, 0, 0);
-        translate_xyz("SO3_orig", -delta, 0, 0);
+        translate_xyz("cyclopentane_orig", -delta, 0, 0);
+        translate_xyz("HBr_orig", -delta, 0, 0);
     }
     if (key == 'w' || key == 'W')
     {
-        translate_xyz("H2O", 0, delta, 0);
-        translate_xyz("SO3", 0, delta, 0);
-        translate_xyz("H2SO4", 0, delta, 0);
+        translate_xyz("cyclopentane", 0, delta, 0);
+        translate_xyz("HBr", 0, delta, 0);
+        translate_xyz("bromocyclopentane", 0, delta, 0);
         translate_xyz("PA", 0, delta, 0);
         translate_xyz("Product", 0, delta, 0);
-        translate_xyz("H2O_orig", 0, delta, 0);
-        translate_xyz("SO3_orig", 0, delta, 0);
+        translate_xyz("cyclopentane_orig", 0, delta, 0);
+        translate_xyz("HBr_orig", 0, delta, 0);
     }
     if (key == 's' || key == 'S')
     {
-        translate_xyz("H2O", 0, -delta, 0);
-        translate_xyz("SO3", 0, -delta, 0);
-        translate_xyz("H2SO4", 0, -delta, 0);
+        translate_xyz("cyclopentane", 0, -delta, 0);
+        translate_xyz("HBr", 0, -delta, 0);
+        translate_xyz("bromocyclopentane", 0, -delta, 0);
         translate_xyz("PA", 0, -delta, 0);
         translate_xyz("Product", 0, -delta, 0);
-        translate_xyz("H2O_orig", 0, -delta, 0);
-        translate_xyz("SO3_orig", 0, -delta, 0);
+        translate_xyz("cyclopentane_orig", 0, -delta, 0);
+        translate_xyz("HBr_orig", 0, -delta, 0);
     }
     if (key == 'd' || key == 'D')
     {
-        translate_xyz("H2O", delta, 0, 0);
-        translate_xyz("SO3", delta, 0, 0);
-        translate_xyz("H2SO4", delta, 0, 0);
+        translate_xyz("cyclopentane", delta, 0, 0);
+        translate_xyz("HBr", delta, 0, 0);
+        translate_xyz("bromocyclopentane", delta, 0, 0);
         translate_xyz("PA", delta, 0, 0);
         translate_xyz("Product", delta, 0, 0);
-        translate_xyz("H2O_orig", delta, 0, 0);
-        translate_xyz("SO3_orig", delta, 0, 0);
+        translate_xyz("cyclopentane_orig", delta, 0, 0);
+        translate_xyz("HBr_orig", delta, 0, 0);
     }
     if (key == '8')
     {
-        translate_xyz("H2O", 0, 0, delta);
-        translate_xyz("SO3", 0, 0, delta);
-        translate_xyz("H2SO4", 0, 0, delta);
+        translate_xyz("cyclopentane", 0, 0, delta);
+        translate_xyz("HBr", 0, 0, delta);
+        translate_xyz("bromocyclopentane", 0, 0, delta);
         translate_xyz("PA", 0, 0, delta);
         translate_xyz("Product", 0, 0, delta);
-        translate_xyz("H2O_orig", 0, 0, delta);
-        translate_xyz("SO3_orig", 0, 0, delta);
+        translate_xyz("cyclopentane_orig", 0, 0, delta);
+        translate_xyz("HBr_orig", 0, 0, delta);
     }
     if (key == '5')
     {
-        translate_xyz("H2O", 0, 0, -delta);
-        translate_xyz("SO3", 0, 0, -delta);
-        translate_xyz("H2SO4", 0, 0, -delta);
+        translate_xyz("cyclopentane", 0, 0, -delta);
+        translate_xyz("HBr", 0, 0, -delta);
+        translate_xyz("bromocyclopentane", 0, 0, -delta);
         translate_xyz("PA", 0, 0, -delta);
         translate_xyz("Product", 0, 0, -delta);
-        translate_xyz("H2O_orig", 0, 0, -delta);
-        translate_xyz("SO3_orig", 0, 0, -delta);
+        translate_xyz("cyclopentane_orig", 0, 0, -delta);
+        translate_xyz("HBr_orig", 0, 0, -delta);
     }
 
     if (key == 'c' || key == 'C')
@@ -884,13 +924,6 @@ void keyboardCallback(unsigned char key, int x, int y)
         lightEffect = 1 - lightEffect;
     }
 
-    if (key == 'p' || key == 'P')
-    {
-        projection++;
-        if (projection == 5)
-            projection = 1;
-    }
-
     if (key == 'R' || key == 'r')
     {
         time_cnt = 0;
@@ -899,8 +932,8 @@ void keyboardCallback(unsigned char key, int x, int y)
         merge_cnt = 0;
         to_print = 1;
         calc = 1;
-        SOcylinderRadius = 0;
-        HOcylinderRadius = 0.2;
+        CBrcylinderRadius = 0;
+        HBrcylinderRadius = 0.2;
 
         for (int i = 0; i < 3; ++i)
         {
@@ -908,21 +941,37 @@ void keyboardCallback(unsigned char key, int x, int y)
             color_t2[i] = 1;
         }
 
-        for (int i = 0; i < 3; ++i)
+        for (int i = 0; i < 6; ++i)
         {
             for (int j = 0; j < 3; ++j)
             {
-                H2O_coords[i][j] = H2O_orig_coords[i][j];
+                cyclopentane_coords[i][j] = cyclopentane_orig_coords[i][j];
             }
         }
 
-        for (int i = 0; i < 4; ++i)
+        for (int i = 0; i < 2; ++i)
         {
             for (int j = 0; j < 3; ++j)
             {
-                SO3_coords[i][j] = SO3_orig_coords[i][j];
+                HBr_coords[i][j] = HBr_orig_coords[i][j];
             }
         }
+    }
+
+    if (key == 'l' || key == 'L')
+    {
+
+        if (lightOption == 6)
+            lightOption = 1;
+        else
+            lightOption++;
+    }
+
+    if (key == 'p' || key == 'P')
+    {
+        projection++;
+        if (projection == 5)
+            projection = 1;
     }
 
     if (key == 13)
@@ -1010,7 +1059,7 @@ void displayCallback(void)
         glLoadIdentity();
     }
 
-    else if (projection == 3) // cavalier
+    else if (projection == 3) // Cavalier
     {
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
@@ -1043,7 +1092,7 @@ void displayCallback(void)
         glLoadIdentity();
         double alpha_d = 63.4;
         double alpha = alpha * 3.14159 / 180;
-        double cavalier[] = {
+        double cabinet[] = {
             1, 0, 0.5 * cos(alpha), 0,
             0, 1, 0.5 * sin(alpha), 0,
             0, 0, 1, 0,
@@ -1058,12 +1107,11 @@ void displayCallback(void)
         glRotatef(-theta, 1.0, 0.0, 0.0);
         glRotatef(phi, 0.0, 1.0, 0.0);
 
-        glMultTransposeMatrixd(cavalier);
+        glMultTransposeMatrixd(cabinet);
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
     }
-
     // Axis x, y and z Toggle
     if (drawThatAxis)
     {
@@ -1081,7 +1129,6 @@ void displayCallback(void)
         glDisable(GL_LIGHTING);
         glDisable(GL_LIGHT0);
     }
-
     if (drawLegend)
     {
         glPushMatrix();
@@ -1090,71 +1137,76 @@ void displayCallback(void)
         glPopMatrix();
     }
 
+    GLfloat all_center[3] = {0, 0, 0};
+
     if (time_cnt == 0)
     {
 
         glPushMatrix();
-        glTranslatef(H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2]);
+        glTranslatef((cyclopentane_coords[0][0] + cyclopentane_coords[2][0]) / 2, (cyclopentane_coords[0][1] + cyclopentane_coords[2][1]) / 2, (cyclopentane_coords[0][2] + cyclopentane_coords[2][2]) / 2);
         glRotatef(rot_angle, -1, -1, -1);
-        glTranslatef(-H2O_coords[0][0], -H2O_coords[0][1], -H2O_coords[0][2]);
-        draw_H2O();
+        glTranslatef(-(cyclopentane_coords[0][0] + cyclopentane_coords[2][0]) / 2, -(cyclopentane_coords[0][1] + cyclopentane_coords[2][1]) / 2,
+                     -(cyclopentane_coords[0][2] + cyclopentane_coords[2][2]) / 2);
+        draw_cyclopentane(all_center);
         glPopMatrix();
 
         glPushMatrix();
-        glTranslatef(SO3_coords[0][0], SO3_coords[0][1], SO3_coords[0][2]);
+        glTranslatef((HBr_coords[0][0] + HBr_coords[1][0]) / 2, (HBr_coords[0][1] + HBr_coords[1][1]) / 2, (HBr_coords[0][2] + HBr_coords[1][2]) / 2);
         glRotatef(rot_angle, -1, -1, -1);
-        glTranslatef(-SO3_coords[0][0], -SO3_coords[0][1], -SO3_coords[0][2]);
-        draw_SO3();
+        glTranslatef(-(HBr_coords[0][0] + HBr_coords[1][0]) / 2, -(HBr_coords[0][1] + HBr_coords[1][1]) / 2, -(HBr_coords[0][2] + HBr_coords[1][2]) / 2);
+        draw_HBr(all_center);
         glPopMatrix();
     }
     if (time_cnt > 0 && time_cnt <= t1)
     {
+        // displayLegend();
         glPushMatrix();
-        glTranslatef(H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2]);
+        glTranslatef((cyclopentane_coords[0][0] + cyclopentane_coords[2][0]) / 2, (cyclopentane_coords[0][1] + cyclopentane_coords[2][1]) / 2, (cyclopentane_coords[0][2] + cyclopentane_coords[2][2]) / 2);
         glRotatef(rot_angle, -1, -1, -1);
-        glTranslatef(-H2O_coords[0][0], -H2O_coords[0][1], -H2O_coords[0][2]);
-        draw_H2O();
+        glTranslatef(-(cyclopentane_coords[0][0] + cyclopentane_coords[2][0]) / 2, -(cyclopentane_coords[0][1] + cyclopentane_coords[2][1]) / 2,
+                     -(cyclopentane_coords[0][2] + cyclopentane_coords[2][2]) / 2);
+        draw_cyclopentane(all_center);
         glPopMatrix();
 
         glPushMatrix();
-        glTranslatef(SO3_coords[0][0], SO3_coords[0][1], SO3_coords[0][2]);
+        glTranslatef((HBr_coords[0][0] + HBr_coords[1][0]) / 2, (HBr_coords[0][1] + HBr_coords[1][1]) / 2, (HBr_coords[0][2] + HBr_coords[1][2]) / 2);
         glRotatef(rot_angle, -1, -1, -1);
-        glTranslatef(-SO3_coords[0][0], -SO3_coords[0][1], -SO3_coords[0][2]);
-        draw_SO3();
+        glTranslatef(-(HBr_coords[0][0] + HBr_coords[1][0]) / 2, -(HBr_coords[0][1] + HBr_coords[1][1]) / 2, -(HBr_coords[0][2] + HBr_coords[1][2]) / 2);
+        draw_HBr(all_center);
         glPopMatrix();
     }
     if (time_cnt > t1 && time_cnt <= t2)
     {
-        double drx = (H2O_coords[0][0] + SO3_coords[0][0]) / 2;
-        double dry = (H2O_coords[0][1] + SO3_coords[0][1]) / 2;
-        double drz = (H2O_coords[0][2] + SO3_coords[0][2]) / 2;
+
+        double drx = (cyclopentane_coords[0][0] + (HBr_coords[0][0] + HBr_coords[1][0]) / 2) / 2;
+        double dry = (cyclopentane_coords[0][1] + (HBr_coords[0][1] + HBr_coords[1][1]) / 2) / 2;
+        double drz = (cyclopentane_coords[0][2] + (HBr_coords[0][2] + HBr_coords[1][2]) / 2) / 2;
 
         glPushMatrix();
         glTranslatef(drx, dry, drz);
         glRotatef(rot_angle, -1, -1, -1);
         glTranslatef(-drx, -dry, -drz);
-        draw_H2O();
+        draw_cyclopentane(all_center);
         glPopMatrix();
 
         glPushMatrix();
         glTranslatef(drx, dry, drz);
         glRotatef(rot_angle, -1, -1, -1);
         glTranslatef(-drx, -dry, -drz);
-        draw_SO3();
+        draw_HBr(all_center);
         glPopMatrix();
     }
 
     // int stop_plus = 120;
     if (time_cnt < 40)
     {
-        draw_plus();
-        draw_arrow();
+        // displayLegend();
+        draw_plus_arrow();
     }
-
-    // draw_H2SO4();
 
     if (time_cnt == t2)
     {
+        // displayLegend();
         merge_cnt++;
         if (merge_cnt >= merge_pause)
         {
@@ -1163,18 +1215,18 @@ void displayCallback(void)
 
         if (to_print)
         {
-            int ind[7] = {0, 2, 0, 1, 3, 2, 1};
-            char type[7] = {'s', 's', 'h', 's', 's', 'h', 'h'};
-            // Type 's': atom from SO3, Typer 'h': atom from H2O
+            int ind[7] = {0, 1, 2, 3, 4, 5, 1};
+            char type[7] = {'c', 'c', 'c', 'c', 'c', 'c', 'h'};
+            // Type 'h': atom from HBr, Type 'c': atom from cyclopentane
 
             for (int i = 0; i < 7; ++i)
             {
                 for (int j = 0; j < 3; ++j)
                 {
-                    if (type[i] == 's')
-                        product_coords[i][j] = SO3_coords[ind[i]][j];
+                    if (type[i] == 'h')
+                        product_coords[i][j] = HBr_coords[ind[i]][j];
                     else
-                        product_coords[i][j] = H2O_coords[ind[i]][j];
+                        product_coords[i][j] = cyclopentane_coords[ind[i]][j];
                 }
             }
 
@@ -1182,7 +1234,7 @@ void displayCallback(void)
             {
                 for (int j = 0; j < 3; ++j)
                 {
-                    deltas[i][j] = (H2SO4_coords[i][j] - product_coords[i][j]) / (t3 - t2);
+                    deltas[i][j] = (bromocyclopentane_coords[i][j] - product_coords[i][j]) / (t3 - t2);
                 }
             }
             to_print = 0;
@@ -1191,38 +1243,40 @@ void displayCallback(void)
 
     if (time_cnt > t2 && time_cnt < t3)
     {
+        // displayLegend();
         glPushMatrix();
-        glTranslatef(product_coords[0][0], product_coords[0][1], product_coords[0][2]);
+        glTranslatef((product_coords[0][0] + product_coords[2][0]) / 2, (product_coords[0][1] + product_coords[2][1]) / 2, (product_coords[0][2] + product_coords[2][2]) / 2);
         glRotatef(rot_angle, -1, -1, -1);
-        glTranslatef(-product_coords[0][0], -product_coords[0][1], -product_coords[0][2]);
+        glTranslatef(-(product_coords[0][0] + product_coords[2][0]) / 2, -(product_coords[0][1] + product_coords[2][1]) / 2, -(product_coords[0][2] + product_coords[2][2]) / 2);
         draw_product();
         glPopMatrix();
     }
     if (time_cnt == t3)
     {
+        // displayLegend();
         glPushMatrix();
-        glTranslatef(H2O_coords[0][0], H2O_coords[0][1], H2O_coords[0][2]);
+        glTranslatef((cyclopentane_coords[0][0] + cyclopentane_coords[2][0]) / 2, (cyclopentane_coords[0][1] + cyclopentane_coords[2][1]) / 2, (cyclopentane_coords[0][2] + cyclopentane_coords[2][2]) / 2);
         glRotatef(rot_angle, -1, -1, -1);
-        glTranslatef(-H2O_coords[0][0], -H2O_coords[0][1], -H2O_coords[0][2]);
-        draw_H2O();
+        glTranslatef(-(cyclopentane_coords[0][0] + cyclopentane_coords[2][0]) / 2, -(cyclopentane_coords[0][1] + cyclopentane_coords[2][1]) / 2,
+                     -(cyclopentane_coords[0][2] + cyclopentane_coords[2][2]) / 2);
+        draw_cyclopentane(all_center);
         glPopMatrix();
 
         glPushMatrix();
-        glTranslatef(SO3_coords[0][0], SO3_coords[0][1], SO3_coords[0][2]);
+        glTranslatef((HBr_coords[0][0] + HBr_coords[1][0]) / 2, (HBr_coords[0][1] + HBr_coords[1][1]) / 2, (HBr_coords[0][2] + HBr_coords[1][2]) / 2);
         glRotatef(rot_angle, -1, -1, -1);
-        glTranslatef(-SO3_coords[0][0], -SO3_coords[0][1], -SO3_coords[0][2]);
-        draw_SO3();
+        glTranslatef(-(HBr_coords[0][0] + HBr_coords[1][0]) / 2, -(HBr_coords[0][1] + HBr_coords[1][1]) / 2, -(HBr_coords[0][2] + HBr_coords[1][2]) / 2);
+        draw_HBr(all_center);
         glPopMatrix();
 
         glPushMatrix();
-        glTranslatef(product_coords[0][0], product_coords[0][1], product_coords[0][2]);
+        glTranslatef((product_coords[0][0] + product_coords[2][0]) / 2, (product_coords[0][1] + product_coords[2][1]) / 2, (product_coords[0][2] + product_coords[2][2]) / 2);
         glRotatef(rot_angle, -1, -1, -1);
-        glTranslatef(-product_coords[0][0], -product_coords[0][1], -product_coords[0][2]);
+        glTranslatef(-(product_coords[0][0] + product_coords[2][0]) / 2, -(product_coords[0][1] + product_coords[2][1]) / 2, -(product_coords[0][2] + product_coords[2][2]) / 2);
         draw_product();
         glPopMatrix();
 
-        draw_plus();
-        draw_arrow();
+        draw_plus_arrow();
     }
 
     glFlush();
